@@ -26,9 +26,10 @@ public class Problem1 {
         //TODO add/edit code here
         for(int i=0;i<arr.length;i++){
             if(arr[i] % 2 == 1){
-                System.out.println(arr[i]);
+                System.out.print(arr[i]);
             }
         }
+        //jns, Jimmy Silva, 9/23/2024
         //end add/edit section
         System.out.println();
         System.out.println("End process");
