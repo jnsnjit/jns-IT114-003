@@ -27,7 +27,30 @@ public class Problem3 {
         //TODO convert each value to positive
         //set the result to the proper index of the output array and maintain the original data type
         //hint: don't forget to handle the data types properly, the result datatype should be the same as the original datatype
-        
+        if(arr[0] instanceof String){
+            String temp;
+            for(int i=0;i<arr.length;i++){
+                temp = arr[i].toString();
+                if(temp.indexOf("-") != -1){
+                    output[i] = temp.substring(2);
+                }else{
+                    output[i] = temp;
+                }
+                //System.out.println(temp);
+            }
+        }else if(arr[0] instanceof Integer){
+            Integer temp;
+            for(int i=0;i<arr.length;i++){
+                temp = (Integer)(Object) arr[i];
+                output[i] = Math.abs(temp);
+            }
+        }else{
+            Double temp;
+            for(int i=0;i<arr.length;i++){
+                temp = (Double)(Object) arr[i];
+                output[i] = Math.abs(temp);
+            } 
+        }
         //end edit section
 
         StringBuilder sb = new StringBuilder();
