@@ -26,7 +26,7 @@ public class NumberGuesser4 {
         // doesn't exist
         try (FileWriter fw = new FileWriter(fileName)) {
             fw.write(String.join(",", fileHeaders));
-            fw.write("\n");// new line
+            System.lineSeparator();// new line
             fw.write(output);
         } catch (IOException e) {
             e.printStackTrace();
