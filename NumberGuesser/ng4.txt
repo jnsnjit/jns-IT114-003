@@ -1,2 +1,1 @@
-Level,Strikes,Number,MaxLevel,Hints
-3,0,13,1,0
+MQ==,MA==,Mg==,MQ==,MA==
