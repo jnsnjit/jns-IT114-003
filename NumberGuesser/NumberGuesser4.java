@@ -57,7 +57,7 @@ public class NumberGuesser4 {
         }
         return data;
     }
-    
+    //TASK 2
     private void loadState() {
         File file = new File(fileName);
         if (!file.exists()) {
@@ -219,12 +219,14 @@ public class NumberGuesser4 {
                 lose();
                 pickNewRandom = true;
             }
+            //TASK 1: IMPLEMENT HIGHER LOWER SYSTEM
             if(guess < number && strikes != maxStrikes && strikes != 0){
                 System.out.println("Higher...");
             }
             if(guess > number && strikes != maxStrikes && strikes != 0){
                 System.out.println("Lower...");
             }
+            //TASK 1
         }
         
         saveState();
@@ -233,7 +235,7 @@ public class NumberGuesser4 {
     private int strToNum(String message) {
         int guess = -1;
         if(message =="help"){
-            return guess;
+            //return guess;
         }
         try {
             guess = Integer.parseInt(message.trim());
@@ -259,7 +261,7 @@ public class NumberGuesser4 {
                 if(strikes < 2){
                     System.out.println("Type a number and press enter");
                 }else{
-                    System.out.println("Type a number and press enter or type hint to recieve a hint");
+                    System.out.println("Type a number and press enter or type help to recieve a hint");
                 }
                 // we'll want to use a local variable here
                 // so we can feed it into multiple functions
