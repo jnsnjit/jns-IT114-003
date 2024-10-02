@@ -142,6 +142,7 @@ public class Client {
     }
 
     private void close() {
+ 
         try {
             System.out.println("Closing output stream");
             out.close();
