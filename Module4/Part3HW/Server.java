@@ -119,6 +119,9 @@ public class Server {
                 disconnect(removedClient);
             }
             return true;
+        }else if(message.indexOf("/roll") != -1){
+            DiceRoller d = new DiceRoller("User[%s]", sender.getClientId(), message.substring(message.indexOf("l")+2));
+            message = d.output();
         }
         // add more "else if" as needed
         return false;
