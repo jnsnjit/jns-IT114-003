@@ -15,6 +15,7 @@ public class ServerThread extends Thread {
     private boolean isRunning = false; //control variable to stop this thread
     private ObjectOutputStream out; //exposed here for send()
     private Server server;// ref to our server so we can call methods on it
+    private String name="";
     // more easily
     private long clientId;
     private Consumer<ServerThread> onInitializationComplete; //callback to inform when this object is ready
@@ -23,7 +24,7 @@ public class ServerThread extends Thread {
      * @param message
      */
     private void info(String message) {
-        System.out.println(String.format("Thread[%s]: %s", getClientId(), message));
+        System.out.println(String.format("Thread[%s]:%s      %s", getClientId(), name, message));
     }
 
     /**
@@ -32,6 +33,7 @@ public class ServerThread extends Thread {
      * @param server
      * @param onInitializationComplete method to inform listener that this object is ready
      */
+    //added new global var, name        jns-it114-003
     protected ServerThread(Socket myClient, Server server, Consumer<ServerThread> onInitializationComplete) {
         Objects.requireNonNull(myClient, "Client socket cannot be null");
         Objects.requireNonNull(server, "Server cannot be null");
@@ -43,6 +45,13 @@ public class ServerThread extends Thread {
         this.clientId = this.threadId();
         this.onInitializationComplete = onInitializationComplete;
 
+    }
+    public void changeName(String message){
+        String name = message.split(" ")[1];
+        this.name = name;
+    }
+    public String callName(){
+        return this.name;
     }
     public long getClientId(){
         return this.clientId;

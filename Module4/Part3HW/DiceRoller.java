@@ -38,8 +38,12 @@ public class DiceRoller {
             return false; 
         }
         // parse the amounts and sides
-        diceAmount = Integer.parseInt(amountPart); 
-        diceSides = Integer.parseInt(sidesPart); 
+        try{
+            diceAmount = Integer.parseInt(amountPart); 
+            diceSides = Integer.parseInt(sidesPart); 
+        }catch(Exception e){
+            return false;
+        }
         return true;
     }
     //method rolls dice inputted amount of times, and displays the total of the rolled dice.

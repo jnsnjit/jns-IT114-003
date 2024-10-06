@@ -59,7 +59,6 @@ public class Server {
         // Improved logging with user ID
         relay("User[" + id + "] disconnected", null);
     }
-
     /**
      * Relays the message from the sender to all connectedClients
      * Internally calls processCommand and evaluates as necessary.
@@ -73,34 +72,37 @@ public class Server {
      * @param sender ServerThread (client) sending the message or null if it's a server-generated message
      */
     protected synchronized void relay(String message, ServerThread sender) {
-        if (sender != null && processCommand(message, sender)==1) {
+        //checks all possible commands with com
+        int com = processCommand(message, sender);
+        if (sender != null && com==1) {
             return;
             //changes for hw, now have an else if statement that checks if the command was for /roll,
             // in which it runs the diceRoller class to do all of the game logic
-        }else if(sender != null && processCommand(message, sender)==2){
-            String name = String.format("User[%s]", sender.getClientId());
+        }else if(sender != null && com==2){
             try{
                 int temp = message.indexOf("l") + 3;
                 String diceType = message.substring(temp);
-                DiceRoller d = new DiceRoller(name,diceType);
+                DiceRoller d = new DiceRoller(sender.callName(),diceType);
                 message = d.output();
             }catch(Exception e){
                 System.out.println("sorry broski, an error occured due to your lousy code");
             }
+        }else if(sender != null && com == 3){
+            //ok lets try to assign the username
+            sender.changeName(message);
+            message = "Ok, changing name!";
+        }else if(sender != null && com == 4){
+            String name = String.format(sender.callName());
+            Coin userCoin = new Coin(name);
+            message = userCoin.output();
         }
-        // let's temporarily use the thread id as the client identifier to
-        // show in all client's chat. This isn't good practice since it's subject to
-        // change as clients connect/disconnect
-        // Note: any desired changes to the message must be done before this line
-        String senderString = sender == null ? "Server" : String.format("User[%s]", sender.getClientId());
+        //show both thread id and name of the client
+        String senderString = sender == null ? "Server" : String.format("User[%s]|%s", sender.getClientId(),sender.callName());
         final String formattedMessage = String.format("%s: %s", senderString, message);
-        // end temp identifier
-
         // loop over clients and send out the message; remove client if message failed
         // to be sent
         // Note: this uses a lambda expression for each item in the values() collection,
         // it's one way we can safely remove items during iteration
-        
         connectedClients.values().removeIf(client -> {
             boolean failedToSend = !client.send(formattedMessage);
             if (failedToSend) {
@@ -118,6 +120,7 @@ public class Server {
      * @param sender
      * @return true if it was a command, false otherwise
      */
+    //jns-it114-003     -    changed method
     private int processCommand(String message, ServerThread sender) {
         if(sender == null){
             return 0;
@@ -132,6 +135,10 @@ public class Server {
             return 1;
         }else if(message.indexOf("/roll") != -1){
             return 2;
+        }else if(message.indexOf("/name") != -1){
+            return 3;
+        }else if(message.indexOf("/coin") != -1){
+            return 4;
         }
         // add more "else if" as needed
         return 0;
