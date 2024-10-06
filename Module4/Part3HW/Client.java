@@ -101,6 +101,7 @@ public class Client {
             // splits on the space after connect (gives us host and port)
             // splits on : to get host as index 0 and port as index 1
             String[] parts = text.trim().replaceAll(" +", " ").split(" ")[1].split(":");
+            //String name = text.trim().replaceAll(" +"," ").split(" ")[2];
             connect(parts[0].trim(), Integer.parseInt(parts[1].trim()));
             return true;
         } else if ("/quit".equalsIgnoreCase(text)) {
