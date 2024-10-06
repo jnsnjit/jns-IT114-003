@@ -1,5 +1,6 @@
 package Module4.Part3HW;
-//implementing dice roller class with name and chosen rolled dice + amount
+
+import java.util.Random;//implementing dice roller class with name and chosen rolled dice + amount
 public class DiceRoller {
     private String name;
     private String diceType;
@@ -11,41 +12,46 @@ public class DiceRoller {
         this.name = name;
         this.diceType = diceType;
     }
-    //checks if diceType string is a proper format, will modify toString method depending on result
-    public boolean isDiceFormat(){
-        String temp = diceType;
-        //loop checks each to see if each character of the string is a digit, if not, check if d, if not, return false
-        for(int x = 0; x<temp.length();x++){
-            if(Character.isDigit(temp.charAt(x))){
-                continue;
-            }
-            if(temp.charAt(x).equalsIgnoreCase("d")){
-                temp = temp.substring(x+1);
-                diceAmount = Integer.parseInt(temp.substring(0,x));
-                break;
-            }
+    // method to check if a string is numeric
+    private boolean isNumeric(String input) {
+        if (input == null) {
             return false;
         }
-        //after checking first half, checks if rest of the string is all digits, returns false if not
-        for(int y=0;y<temp.length();y++){
-            if(Character.isDigit(temp.charAt(y))){
-                continue;
-            }else{
+        for (char c : input.toCharArray()) {
+            if (!Character.isDigit(c)) {
                 return false;
             }
         }
-        diceSides = Integer.parseInt(temp);
+        return true;
+    }
+    //checks if diceType string is a proper format, will modify toString method depending on result
+    public boolean isDiceFormat(){
+        int isDChar = diceType.indexOf("d");
+        String temp = diceType;
+        if(isDChar == -1){
+            return false;
+        }
+        String amountPart = temp.substring(0,isDChar);
+        String sidesPart = temp.substring(isDChar + 1);
+        // checks if valid with numeric method
+        if (!isNumeric(amountPart) || !isNumeric(sidesPart)) {
+            return false; 
+        }
+        // parse the amounts and sides
+        diceAmount = Integer.parseInt(amountPart); 
+        diceSides = Integer.parseInt(sidesPart); 
         return true;
     }
     //method rolls dice inputted amount of times, and displays the total of the rolled dice.
     private String result(){
         int total = 0;
-        int roll;
+        int roll = 0;
+        Random r = new Random();
         for(int n =0;n<diceAmount;n++){
-            roll = Math.random() * diceSides;
+            roll = (int) (r.nextInt(diceSides) + 1);
             total += roll;
         }
-        return roll + "";
+        return total + "";
     }
     //output method, if dice format is correct, will display rolled dice for user, if not, tells that the format was wrong
     public String output(){

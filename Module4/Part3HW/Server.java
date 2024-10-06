@@ -73,9 +73,19 @@ public class Server {
      * @param sender ServerThread (client) sending the message or null if it's a server-generated message
      */
     protected synchronized void relay(String message, ServerThread sender) {
-        if (sender != null && processCommand(message, sender)) {
+        if (sender != null && processCommand(message, sender)==1) {
 
             return;
+        }else if(sender != null && processCommand(message, sender)==2){
+            String name = String.format("User[%s]", sender.getClientId());
+            try{
+                int temp = message.indexOf("l") + 3;
+                String diceType = message.substring(temp);
+                DiceRoller d = new DiceRoller(name,diceType);
+                message = d.output();
+            }catch(Exception e){
+                System.out.println("sorry broski, an error occured due to your lousy code");
+            }
         }
         // let's temporarily use the thread id as the client identifier to
         // show in all client's chat. This isn't good practice since it's subject to
@@ -107,9 +117,9 @@ public class Server {
      * @param sender
      * @return true if it was a command, false otherwise
      */
-    private boolean processCommand(String message, ServerThread sender) {
+    private int processCommand(String message, ServerThread sender) {
         if(sender == null){
-            return false;
+            return 0;
         }
         System.out.println("Checking command: " + message);
         // disconnect
@@ -118,13 +128,12 @@ public class Server {
             if (removedClient != null) {
                 disconnect(removedClient);
             }
-            return true;
+            return 1;
         }else if(message.indexOf("/roll") != -1){
-            DiceRoller d = new DiceRoller("User[%s]", sender.getClientId(), message.substring(message.indexOf("l")+2));
-            message = d.output();
+            return 2;
         }
         // add more "else if" as needed
-        return false;
+        return 0;
     }
 
     public static void main(String[] args) {
