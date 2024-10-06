@@ -74,8 +74,9 @@ public class Server {
      */
     protected synchronized void relay(String message, ServerThread sender) {
         if (sender != null && processCommand(message, sender)==1) {
-
             return;
+            //changes for hw, now have an else if statement that checks if the command was for /roll,
+            // in which it runs the diceRoller class to do all of the game logic
         }else if(sender != null && processCommand(message, sender)==2){
             String name = String.format("User[%s]", sender.getClientId());
             try{

@@ -51,6 +51,7 @@ public class DiceRoller {
             roll = (int) (r.nextInt(diceSides) + 1);
             total += roll;
         }
+        //return total of dice rolls
         return total + "";
     }
     //output method, if dice format is correct, will display rolled dice for user, if not, tells that the format was wrong
