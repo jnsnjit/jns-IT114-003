@@ -96,7 +96,13 @@ public enum Server {
         System.out.println(String.format("Created new Room %s", name));
         return true;
     }
-
+    protected boolean createGameRoom(String name) {
+        final String nameCheck = name.toLowerCase();
+        GameRoom room = new GameRoom(name);
+        rooms.put(nameCheck, room);
+        System.out.println(String.format("Created new GameRoom %s", name));
+        return true;
+    }
     /**
      * Attempts to move a client (ServerThread) between rooms
      * 

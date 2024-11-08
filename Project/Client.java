@@ -38,6 +38,8 @@ public enum Client {
     private final String LOGOFF = "logoff";
     private final String LOGOUT = "logout";
     private final String SINGLE_SPACE = " ";
+    // constants related to rock paper scissor game
+    private final String CREATE_GAMEROOM = "creategame";
 
     // needs to be private now that the enum logic is handling this
     private Client() {
@@ -150,11 +152,16 @@ public enum Client {
                 final String commandValue = commandParts.length >= 2 ? commandParts[1] : "";
                 switch (command) {
                     case CREATE_ROOM:
-                        sendCreateRoom(commandValue);
+                        sendCreateRoom(commandValue, false);
                         wasCommand = true;
                         break;
                     case JOIN_ROOM:
                         sendJoinRoom(commandValue);
+                        wasCommand = true;
+                        break;
+                    //add case for creategame command, add break statement too.
+                    case CREATE_GAMEROOM:
+                        sendCreateRoom(commandValue, true);
                         wasCommand = true;
                         break;
                     // Note: these are to disconnect, they're not for changing rooms
@@ -178,9 +185,13 @@ public enum Client {
      * 
      * @param room
      */
-    private void sendCreateRoom(String room) {
+    private void sendCreateRoom(String room, boolean game) {
         Payload p = new Payload();
-        p.setPayloadType(PayloadType.ROOM_CREATE);
+        if(game){
+            p.setPayloadType(PayloadType.ROOM_CREATE_GAME);
+        }else{
+            p.setPayloadType(PayloadType.ROOM_CREATE);
+        }
         p.setMessage(room);
         send(p);
     }
@@ -196,7 +207,11 @@ public enum Client {
         p.setMessage(room);
         send(p);
     }
-
+    //need to create a payload for RPS
+    private void sendGameRoom(String room){
+        //new gameroom payload()
+        //send
+    }
     /**
      * Tells the server-side we want to disconnect
      */

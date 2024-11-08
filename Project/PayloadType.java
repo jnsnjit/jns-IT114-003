@@ -7,5 +7,7 @@ public enum PayloadType {
     DISCONNECT,  // distinct disconnect action
     ROOM_CREATE,
     ROOM_JOIN, // join/leave room based on boolean
-    MESSAGE // sender and message
+    MESSAGE, // sender and message
+    ROOM_CREATE_GAME, // creating game room
+    READY_UP // tell room player is ready
 }

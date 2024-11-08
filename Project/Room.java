@@ -3,11 +3,11 @@ package Project;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Room implements AutoCloseable{
-    private String name;// unique name of the Room
-    private volatile boolean isRunning = false;
-    private ConcurrentHashMap<Long, ServerThread> clientsInRoom = new ConcurrentHashMap<Long, ServerThread>();
-
-    public final static String LOBBY = "lobby";
+    protected String name;// unique name of the Room
+    protected volatile boolean isRunning = false;
+    protected ConcurrentHashMap<Long, ServerThread> clientsInRoom = new ConcurrentHashMap<Long, ServerThread>();
+    protected boolean isGame = false;
+    public final static String LOBBY = "lobby"; 
 
     private void info(String message) {
         System.out.println(String.format("Room[%s]: %s", name, message));
@@ -206,8 +206,9 @@ public class Room implements AutoCloseable{
     // end send data to client(s)
 
     // receive data from ServerThread
-    protected void handleCreateRoom(ServerThread sender, String room) {
-        if (Server.INSTANCE.createRoom(room)) {
+    protected void handleCreateRoom(ServerThread sender, String room, boolean game) {
+        // ternary checks if game true, if so, creategame, if not, create regular room
+        if (game ? Server.INSTANCE.createGameRoom(room) : Server.INSTANCE.createRoom(room)) {
             Server.INSTANCE.joinRoom(room, sender);
         } else {
             sender.sendMessage(String.format("Room %s already exists", room));
@@ -223,6 +224,13 @@ public class Room implements AutoCloseable{
     protected void clientDisconnect(ServerThread sender) {
         disconnect(sender);
     }
-
+    protected void makeGame(ServerThread sender){
+        if(name != "lobby"){
+            isGame = true;
+        }else{
+            info("This is the lobby, can't become a game lobby!");
+            sender.sendMessage("lobby can not become game lobby, make new room for games!");
+        }
+    }
     // end receive data from ServerThread
 }
