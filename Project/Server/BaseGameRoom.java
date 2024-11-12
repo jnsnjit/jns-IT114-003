@@ -16,7 +16,7 @@ public abstract class BaseGameRoom extends Room {
     // this makes it easier to utilize concepts across all project types and not
     // impact chatroom projects
     protected ConcurrentHashMap<Long, ServerPlayer> playersInRoom = new ConcurrentHashMap<Long, ServerPlayer>();
-
+    
     private TimedEvent readyTimer = null;
 
     protected final int MINIMUM_REQUIRED_TO_START = 2;

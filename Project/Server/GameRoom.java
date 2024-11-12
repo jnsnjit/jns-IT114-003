@@ -1,5 +1,7 @@
 package Project.Server;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 import Project.Common.LoggerUtil;
 import Project.Common.Phase;
 import Project.Common.TimedEvent;
@@ -12,6 +14,7 @@ public class GameRoom extends BaseGameRoom {
     // used for granular turn handling (usually turn-order turns)
     private TimedEvent turnTimer = null;
     
+    // hashmap of threads connected and if they are ready
     public GameRoom(String name) {
         super(name);
     }
@@ -68,7 +71,9 @@ public class GameRoom extends BaseGameRoom {
     @Override
     protected void onSessionStart(){
         LoggerUtil.INSTANCE.info("onSessionStart() start");
-        changePhase(Phase.IN_PROGRESS);
+        changePhase(Phase.MAKE_CHOICE);
+        //send message to players to roll rps.
+        sendMessage(null, "make rps command! 'rps rock' ...");
         LoggerUtil.INSTANCE.info("onSessionStart() end");
         onRoundStart();
     }
@@ -79,6 +84,7 @@ public class GameRoom extends BaseGameRoom {
         LoggerUtil.INSTANCE.info("onRoundStart() start");
         resetRoundTimer();
         startRoundTimer();
+        //all players must make decision, those who dont, do not play
         LoggerUtil.INSTANCE.info("onRoundStart() end");
     }
 
@@ -123,7 +129,6 @@ public class GameRoom extends BaseGameRoom {
     
 
     // send/sync data to ServerPlayer(s)
-
     
     // end send data to ServerPlayer(s)
 
