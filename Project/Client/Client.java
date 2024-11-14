@@ -18,6 +18,7 @@ import Project.Common.Payload;
 import Project.Common.ChoicePayload;
 import Project.Common.PayloadType;
 import Project.Common.Phase;
+import Project.Common.Player;
 import Project.Common.ReadyPayload;
 import Project.Common.RoomResultsPayload;
 import Project.Common.TextFX;
@@ -229,13 +230,15 @@ public enum Client {
         rp.setReady(true); // <- techically not needed as we'll use the payload type as a trigger
         send(rp);
     }
+
     private void sendChoice(String choice){
         String choicef = choice.toLowerCase();
         ChoicePayload rps = new ChoicePayload();
         if(choicef.equals("rock") || choicef.equals("paper") || choicef.equals("scissors")){
             rps.setChoice(choicef);
+            send(rps);
         }else{
-            System.out.println("Choice must either be rock, paper, or scissors.");
+            System.out.println("Choice must either be rock, paper, or scissors. Only works in non-lobby rooms");
         }
     }
     /**

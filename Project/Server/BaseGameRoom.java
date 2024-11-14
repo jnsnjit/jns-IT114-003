@@ -42,14 +42,13 @@ public abstract class BaseGameRoom extends Room {
 
     /**
      * Turn initialization step (if there are distinct turns)
-     */
+     
     protected abstract void onTurnStart();
-
+    */
     /**
      * Turn cleanup step
-     */
     protected abstract void onTurnEnd();
-
+    */
     /**
      * Round cleanup step
      */
@@ -150,7 +149,6 @@ public abstract class BaseGameRoom extends Room {
             onSessionEnd();
         }
     }
-
     protected void resetReadyStatus() {
         playersInRoom.values().forEach(p -> p.setReady(false));
         sendResetReadyTrigger();

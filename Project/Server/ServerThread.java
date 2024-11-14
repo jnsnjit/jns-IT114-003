@@ -10,7 +10,7 @@ import Project.Common.Phase;
 import Project.Common.ReadyPayload;
 import Project.Common.RoomResultsPayload;
 import Project.Common.Payload;
-
+import Project.Common.ChoicePayload;
 import Project.Common.ConnectionPayload;
 import Project.Common.LoggerUtil;
 
@@ -126,6 +126,17 @@ public class ServerThread extends BaseServerThread {
                         sendMessage("You must be in a GameRoom to do the ready check");
                     }
                     break;
+                case CHOICE:
+                    //receive choicePayload and process logic
+                    try {
+                        // cast to GameRoom as the subclass will handle all Game logic
+                        ((GameRoom) currentRoom).checkCurrentPhase(this,Phase.MAKE_CHOICE);
+                        //will throw exception if room is not in MAKE_CHOICE phase.
+                        //now can process command 
+                        ((GameRoom) currentRoom).recieveChoice(this, ((ChoicePayload) payload).getChoice());
+                    } catch (Exception e) {
+                        sendMessage("You must be in a active GameRoom to use rps command");
+                    }
                 default:
                     break;
             }

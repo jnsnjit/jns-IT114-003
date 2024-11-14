@@ -12,8 +12,6 @@ import Project.Common.Player;
  */
 public class ClientPlayer extends Player {
     private String clientName;
-    private char choice;
-
     public String getClientName() {
         return clientName;
     }

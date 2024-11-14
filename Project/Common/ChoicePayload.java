@@ -16,4 +16,7 @@ public class ChoicePayload extends Payload {
             this.choice = 3;
         }
     }
+    public Integer getChoice(){
+        return Integer.valueOf(choice);
+    }
 }
