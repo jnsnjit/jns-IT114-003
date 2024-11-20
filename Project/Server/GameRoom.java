@@ -219,7 +219,8 @@ public class GameRoom extends BaseGameRoom {
         //reset all alive values back to true
         Collection<ServerPlayer> players = playersInRoom.values();
         for(ServerPlayer p : players){
-            p.reset();
+            p.softReset();
+            playerChoices.remove(p);
         }
     }
     // end lifecycle methods

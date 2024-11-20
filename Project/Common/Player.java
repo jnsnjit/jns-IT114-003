@@ -35,6 +35,13 @@ public class Player {
         this.isReady = false;
         this.choice = -1;
         this.points = 0;
+        this.alive = true;
+    }
+    public void softReset(){
+        this.isReady = false;
+        this.choice = -1;
+        this.points = 0;
+        this.alive = true;
     }
     public void setChoice(Integer choice){
         this.choice = choice;

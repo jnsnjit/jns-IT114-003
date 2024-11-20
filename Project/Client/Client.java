@@ -238,7 +238,7 @@ public enum Client {
             rps.setChoice(choicef);
             send(rps);
         }else{
-            System.out.println("Choice must either be rock, paper, or scissors. Only works in non-lobby rooms");
+            System.out.println("Choice must either be rock, paper, or scissors. Only works in active non-lobby rooms");
         }
     }
     /**
