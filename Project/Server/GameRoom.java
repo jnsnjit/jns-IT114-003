@@ -1,9 +1,16 @@
 package Project.Server;
 
+import java.util.List;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import java.util.concurrent.ConcurrentHashMap;
+import Project.Common.Player;
 import java.util.logging.Logger;
 import java.util.ArrayList;
 import java.util.Collection;
+import Project.Common.TimerType;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +31,7 @@ public class GameRoom extends BaseGameRoom {
     
     // hashmap of players and there choices, double memory usage though
     protected ConcurrentHashMap<ServerPlayer,Integer> playerChoices = new ConcurrentHashMap<ServerPlayer, Integer>();
+    private int round = 0;
 
     public GameRoom(String name) {
         super(name);
@@ -33,8 +41,21 @@ public class GameRoom extends BaseGameRoom {
     @Override
     protected void onClientAdded(ServerPlayer sp){
         // sync GameRoom state to new client
-        syncCurrentPhase(sp);
-        syncReadyStatus(sp);
+        // give a slight delay to allow the Room list content to be sent from the base
+        // class
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                syncCurrentPhase(sp);
+                syncReadyStatus(sp);
+            }
+        }.start();
     }
 
     /** {@inheritDoc} */
@@ -53,13 +74,17 @@ public class GameRoom extends BaseGameRoom {
 
     // timer handlers
     private void startRoundTimer(){
-        roundTimer = new TimedEvent(30, ()-> onRoundEnd());
-        roundTimer.setTickCallback((time)->System.out.println("Round Time: " + time));
+        roundTimer = new TimedEvent(30, () -> onRoundEnd());
+        roundTimer.setTickCallback((time) -> {
+            System.out.println("Round Time: " + time);
+            sendCurrentTime(TimerType.ROUND, time);
+        });
     }
     private void resetRoundTimer(){
         if(roundTimer != null){
             roundTimer.cancel();
             roundTimer = null;
+            sendCurrentTime(TimerType.ROUND, -1);
         }
     }
     /**
@@ -99,6 +124,8 @@ public class GameRoom extends BaseGameRoom {
         }
         sendMessage(null, "make rps command! 'rps rock' ...");
         LoggerUtil.INSTANCE.info("onRoundStart() start");
+        round++;
+        sendGameEvent("Round: " + round);
         //reset values from last game to make sure players can roll again
         Collection<ServerPlayer> players = playersInRoom.values();
         for(ServerPlayer p : players){
@@ -257,6 +284,49 @@ public class GameRoom extends BaseGameRoom {
             LoggerUtil.INSTANCE.info("onRoundStart() end");
             onRoundEnd();
         }
+    }
+    private void checkPlayerIsReady(ServerPlayer sp) throws Exception {
+        if (!sp.isReady()) {
+            sp.sendGameEvent("You weren't ready in time");
+            throw new Exception("Player isn't ready");
+        }
+    }
+    private void sendGameEvent(String str) {
+        sendGameEvent(str, null);
+    }
+        /**
+     * Sends a game event to specific clients (by id)
+     * @param str
+     * @param targets
+     */
+    private void sendGameEvent(String str, List<Long> targets) {
+        playersInRoom.values().removeIf(spInRoom -> {
+            boolean canSend = false;
+            if (targets != null) {
+                if (targets.contains(spInRoom.getClientId())) {
+                    canSend = true;
+                }
+            } else {
+                canSend = true;
+            }
+            if (canSend) {
+                boolean failedToSend = !spInRoom.sendGameEvent(str);
+                if (failedToSend) {
+                    removedClient(spInRoom.getServerThread());
+                }
+                return failedToSend;
+            }
+            return false;
+        });
+    }
+    private void sendPointsUpdate(ServerPlayer sp) {
+        playersInRoom.values().removeIf(spInRoom -> {
+            boolean failedToSend = !spInRoom.sendPointsUpdate(sp.getClientId(), sp.getPoints());
+            if (failedToSend) {
+                removedClient(spInRoom.getServerThread());
+            }
+            return failedToSend;
+        });
     }
     protected boolean determineWinner(Entry<ServerPlayer, Integer> loser, Entry<ServerPlayer, Integer> winner){
         //first player rolled losing roll, second rolled winning roll, remove loser from map.

@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import Project.Common.LoggerUtil;
 import Project.Common.Phase;
 import Project.Common.TimedEvent;
+import Project.Common.TimerType;
 
 /**
  * No edits should be needed in this file, this prepares the core logic for the
@@ -117,6 +118,7 @@ public abstract class BaseGameRoom extends Room {
         if (readyTimer != null) {
             readyTimer.cancel();
             readyTimer = null;
+            sendCurrentTime(TimerType.READY, -1);
         }
     }
 
@@ -133,7 +135,10 @@ public abstract class BaseGameRoom extends Room {
                 // callback to trigger when ready expires
                 checkReadyStatus();
             });
-            readyTimer.setTickCallback((time)->System.out.println("Ready Timer: " + time));
+            readyTimer.setTickCallback((time) -> {
+                System.out.println("Ready Timer: " + time);
+                sendCurrentTime(TimerType.READY, time);
+            });
         }
     }
 
@@ -179,13 +184,22 @@ public abstract class BaseGameRoom extends Room {
     /**
      * Sends the current phase to all clients
      */
-    protected void sendCurrentPhase(){
+    protected void sendCurrentTime(TimerType timerType, int time) {
         playersInRoom.values().removeIf(spInRoom -> {
-            boolean failedToSend = !spInRoom.sendCurrentPhase(currentPhase);
+            boolean failedToSend = !spInRoom.sendCurrentTime(timerType, time);
             if (failedToSend) {
                 removedClient(spInRoom.getServerThread());
             }
             return failedToSend;
+        });
+    }
+    protected void sendCurrentPhase() {
+        playersInRoom.values().removeIf(spInRoom -> {
+        boolean failedToSend = !spInRoom.sendCurrentPhase(currentPhase);
+        if (failedToSend) {
+            removedClient(spInRoom.getServerThread());
+        }
+        return failedToSend;
         });
     }
 

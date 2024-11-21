@@ -2,6 +2,7 @@ package Project.Server;
 
 import Project.Common.Phase;
 import Project.Common.Player;
+import Project.Common.TimerType;
 
 /**
  * Server-only data about a player
@@ -33,12 +34,21 @@ public class ServerPlayer extends Player{
     public boolean sendReadyStatus(long clientId, boolean isReady){
        return client.sendReadyStatus(clientId, isReady);
     }
+    public boolean sendCurrentTime(TimerType timerType, int time) {
+        return client.sendCurrentTime(timerType, time);
+    }
 
+    public boolean sendPointsUpdate(long clientId, int points) {
+        return client.sendPointsUpdate(clientId, points);
+    }
     public boolean sendResetReady(){
         return client.sendResetReady();
     }
 
     public boolean sendCurrentPhase(Phase phase){
         return client.sendCurrentPhase(phase);
+    }
+    public boolean sendGameEvent(String message){
+        return client.sendGameEvent(message);
     }
 }
