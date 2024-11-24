@@ -125,7 +125,9 @@ public class GameEventsPanel extends JPanel implements IPhaseEvent, IReadyEvent,
             return;
         }
         String clientName = Client.INSTANCE.getClientNameFromId(clientId);
-        addText(String.format("%s[%s] is %s", clientName, clientId, isReady ? "ready" : "not ready"));
+        if(isReady){
+            addText(String.format("%s[%s] is ready", clientName, clientId));
+        }
     }
 
     @Override

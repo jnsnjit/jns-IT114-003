@@ -51,4 +51,7 @@ public class ServerPlayer extends Player{
     public boolean sendGameEvent(String message){
         return client.sendGameEvent(message);
     }
+    public boolean sendLeaderboard(String[][] board){
+        return client.sendLeaderboard(board);
+    }
 }

@@ -15,5 +15,6 @@ public enum PayloadType {
     PHASE, // syncs current phase of session (used as a switch to only allow certain logic to execute)
     CHOICE, // player choice
     TIME, // sync time
-    POINTS, // syncs player points 
+    POINTS, // syncs player points
+    LEADERBOARD //send leaderboard information
 }

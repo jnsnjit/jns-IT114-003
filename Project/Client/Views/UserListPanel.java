@@ -217,7 +217,7 @@ public class UserListPanel extends JPanel implements IReadyEvent, IPointsEvent, 
             });
         } else if (userItemsMap.containsKey(clientId)) {
             SwingUtilities.invokeLater(() -> {
-                userItemsMap.get(clientId).setTurn(isReady, Color.GRAY);
+                userItemsMap.get(clientId).setTurn(isReady, Color.GREEN);
             });
         }
     }

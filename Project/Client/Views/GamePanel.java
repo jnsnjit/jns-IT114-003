@@ -30,9 +30,9 @@ public class GamePanel extends JPanel implements IRoomEvents, IPhaseEvent {
     public GamePanel(ICardControls controls) {
         super(new BorderLayout());
 
-        // Create the buttons and add them to a panel
-        JButton doSomething = new JButton("Do Something");
-        doSomething.addActionListener(event->{
+        // Create the three buttons for either rock, paper, or scissors and add them to a panel
+        JButton rockButton = new JButton("Rock");
+        rockButton.addActionListener(event->{
             try {
                 Client.INSTANCE.sendChoice("rock");
             } catch (Exception e) {
@@ -40,8 +40,29 @@ public class GamePanel extends JPanel implements IRoomEvents, IPhaseEvent {
                 e.printStackTrace();
             }
         });
-        buttonPanel.add(doSomething);
+        buttonPanel.add(rockButton);
 
+        JButton paperButton = new JButton("Paper");
+        paperButton.addActionListener(event ->{
+            try{
+                Client.INSTANCE.sendChoice("paper");
+            } catch (Exception e) {
+                // auto catch problems
+                e.printStackTrace();
+            }
+        });
+        buttonPanel.add(paperButton);
+
+        JButton scissorsButton = new JButton("Scissors");
+        scissorsButton.addActionListener(event ->{
+            try{
+                Client.INSTANCE.sendChoice("scissors");
+            } catch (Exception e) {
+                // auto catch problems
+                e.printStackTrace();
+            }
+        });
+        buttonPanel.add(scissorsButton);
 
         JPanel gameContainer = new JPanel(new CardLayout());
         cardLayout = (CardLayout) gameContainer.getLayout();

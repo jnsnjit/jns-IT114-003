@@ -18,6 +18,7 @@ import Project.Common.RoomResultsPayload;
 import Project.Common.TimerPayload;
 import Project.Common.TimerType;
 import Project.Common.Constants;
+import Project.Common.LeaderboardPayload;
 
 /**
  * A server-side representation of a single client.
@@ -189,7 +190,12 @@ public class ServerThread extends BaseServerThread {
     public boolean sendGameEvent(String str) {
         return sendMessage(Constants.GAME_EVENT_CHANNEL, str);
     }
-
+    public boolean sendLeaderboard(String[][] board){
+        LeaderboardPayload p = new LeaderboardPayload();
+        p.setPayloadType(PayloadType.LEADERBOARD);
+        p.setLeaderboard(board);
+        return send(p);
+    }
     public boolean sendCurrentPhase(Phase phase){
         Payload p = new Payload();
         p.setPayloadType(PayloadType.PHASE);
