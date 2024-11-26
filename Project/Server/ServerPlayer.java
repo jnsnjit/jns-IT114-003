@@ -57,13 +57,4 @@ public class ServerPlayer extends Player{
     public boolean sendLeaderboard(List<LeaderboardRecord> board){
         return client.sendLeaderboard(board);
     }
-    public int compareTo(ServerPlayer other){
-        if(client.getClientId() > other.getClientId()){
-            return 1;
-        } else if (client.getClientId() == other.getClientId()){
-            return 0;
-        } else {
-            return -1;
-        }
-    }
 }
