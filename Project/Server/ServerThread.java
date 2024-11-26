@@ -13,6 +13,13 @@ import Project.Common.Payload;
 import Project.Common.ChoicePayload;
 import Project.Common.ConnectionPayload;
 import Project.Common.LoggerUtil;
+import Project.Common.PointsPayload;
+import Project.Common.RoomResultsPayload;
+import Project.Common.TimerPayload;
+import Project.Common.TimerType;
+import Project.Common.Constants;
+import Project.Common.LeaderboardPayload;
+import Project.Common.LeaderboardRecord;
 
 /**
  * A server-side representation of a single client.
@@ -133,8 +140,9 @@ public class ServerThread extends BaseServerThread {
                         ((GameRoom) currentRoom).checkCurrentPhase(this,Phase.MAKE_CHOICE);
                         //will throw exception if room is not in MAKE_CHOICE phase.
                         //now can process command 
-                        ((GameRoom) currentRoom).recieveChoice(this, ((ChoicePayload) payload).getChoice());
+                        ((GameRoom) currentRoom).recieveChoice(this,((ChoicePayload) payload).getChoice());
                     } catch (Exception e) {
+                        LoggerUtil.INSTANCE.severe("Could not process Payload: " + payload, e);
                         sendMessage("You must be in a active GameRoom to use rps command");
                     }
                 default:
@@ -146,7 +154,50 @@ public class ServerThread extends BaseServerThread {
         }
     }
     // send methods specific to non-chatroom projects
+    // send methods specific to non-chatroom
+    /**
+     * Syncs a specific client's points
+     * 
+     * @param clientId
+     * @param points
+     * @return
+     */
+    public boolean sendPointsUpdate(long clientId, int points) {
+        PointsPayload rp = new PointsPayload();
+        rp.setPoints(points);
+        rp.setClientId(clientId);
+        return send(rp);
+    }
 
+    /**
+     * Syncs the current time of a specific TimerType
+     * 
+     * @param timerType
+     * @param time
+     * @return
+     */
+    public boolean sendCurrentTime(TimerType timerType, int time) {
+        TimerPayload tp = new TimerPayload();
+        tp.setTime(time);
+        tp.setTimerType(timerType);
+        return send(tp);
+    }
+
+    /**
+     * Sends a message as a GAME_EVENT for non-chat UI
+     * 
+     * @param str
+     * @return
+     */
+    public boolean sendGameEvent(String str) {
+        return sendMessage(Constants.GAME_EVENT_CHANNEL, str);
+    }
+    public boolean sendLeaderboard(List<LeaderboardRecord> board){
+        LeaderboardPayload p = new LeaderboardPayload();
+        p.setPayloadType(PayloadType.LEADERBOARD);
+        p.setLeaderboard(board);
+        return send(p);
+    }
     public boolean sendCurrentPhase(Phase phase){
         Payload p = new Payload();
         p.setPayloadType(PayloadType.PHASE);

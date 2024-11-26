@@ -25,4 +25,5 @@ public class ClientPlayer extends Player {
         super.reset();
         this.clientName = "";
     }
+    
 }
