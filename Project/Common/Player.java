@@ -40,7 +40,8 @@ public class Player {
     public void softReset(){
         this.isReady = false;
         this.choice = -1;
-        this.points = 0;
+        //want room to remember points across ga
+        //this.points = 0;
         this.alive = true;
     }
     public void setChoice(Integer choice){

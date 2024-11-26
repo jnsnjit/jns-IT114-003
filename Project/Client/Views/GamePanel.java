@@ -9,22 +9,30 @@ import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 
 import Project.Client.CardView;
 import Project.Client.Client;
+import Project.Client.Interfaces.IBoardEvents;
 import Project.Client.Interfaces.ICardControls;
 import Project.Client.Interfaces.IPhaseEvent;
 import Project.Client.Interfaces.IRoomEvents;
 import Project.Common.Constants;
+import Project.Common.LeaderboardRecord;
 import Project.Common.Phase;
 
-public class GamePanel extends JPanel implements IRoomEvents, IPhaseEvent {
+public class GamePanel extends JPanel implements IRoomEvents, IPhaseEvent, IBoardEvents {
 
     private JPanel playPanel;
+    private JPanel scorePanel;
+    private JTable scoreTable;
     private CardLayout cardLayout;
     private static final String READY_PANEL = "READY";
     private static final String PLAY_PANEL = "PLAY";//example panel for this lesson
+    private static final String BOARD_PANEL = "LEADERBOARD";
     JPanel buttonPanel = new JPanel();
 
     public GamePanel(ICardControls controls) {
@@ -78,9 +86,17 @@ public class GamePanel extends JPanel implements IRoomEvents, IPhaseEvent {
         playPanel.add(buttonPanel);
         gameContainer.add(PLAY_PANEL, playPanel);
 
+        scorePanel = new JPanel(new BorderLayout());
+        scorePanel.setName(BOARD_PANEL);
+        scoreTable = new JTable();
+        JScrollPane scrollPane = new JScrollPane(scoreTable);
+        scorePanel.add(scrollPane, BorderLayout.CENTER);
+        gameContainer.add(BOARD_PANEL, scorePanel);
+
         GameEventsPanel gameEventsPanel = new GameEventsPanel();
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, gameContainer, gameEventsPanel);
         splitPane.setResizeWeight(0.7);
+
 
         playPanel.addComponentListener(new ComponentAdapter() {
             @Override
@@ -134,5 +150,29 @@ public class GamePanel extends JPanel implements IRoomEvents, IPhaseEvent {
     @Override
     public void onReceiveRoomList(List<String> rooms, String message) {
         // Not used here, but needs to be defined due to interface
+    }
+    public void onRecieveLeaderboard(List<LeaderboardRecord> lbr){
+        // add table creation here
+        DefaultTableModel dfm = new DefaultTableModel(new String[] { "Rank", "Player", "Score" }, 0);
+        scoreTable.setModel(dfm);
+        //sort table by player points
+        for (int i = 0; i < lbr.size() - 1; i++) {
+            for (int j = 0; j < lbr.size() - i - 1; j++) {
+                if ((lbr.get(j)).getPoints() < (lbr.get(j + 1)).getPoints()) {
+                    // Swap elements
+                    LeaderboardRecord temp = (lbr.get(j));
+                    lbr.set(j, lbr.get(j + 1));
+                    lbr.set(j + 1, temp);
+                }
+            }
+            //System.out.println("After iteration " + (i + 1) + ": " + numbers);
+        }
+        int rank = 1;
+        for (LeaderboardRecord row : lbr) {
+            row.setRank(rank);
+            dfm.addRow(new Object[]{row.getRank(), row.getName(),row.getPoints()});
+            rank++;
+        }
+        cardLayout.show(playPanel.getParent(), BOARD_PANEL);
     }
 }

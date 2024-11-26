@@ -1,8 +1,11 @@
 package Project.Server;
 
+import Project.Common.LeaderboardRecord;
 import Project.Common.Phase;
 import Project.Common.Player;
 import Project.Common.TimerType;
+
+import java.util.List;
 
 /**
  * Server-only data about a player
@@ -51,7 +54,16 @@ public class ServerPlayer extends Player{
     public boolean sendGameEvent(String message){
         return client.sendGameEvent(message);
     }
-    public boolean sendLeaderboard(String[][] board){
+    public boolean sendLeaderboard(List<LeaderboardRecord> board){
         return client.sendLeaderboard(board);
+    }
+    public int compareTo(ServerPlayer other){
+        if(client.getClientId() > other.getClientId()){
+            return 1;
+        } else if (client.getClientId() == other.getClientId()){
+            return 0;
+        } else {
+            return -1;
+        }
     }
 }

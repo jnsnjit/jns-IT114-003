@@ -20,11 +20,13 @@ import Project.Client.Interfaces.IPhaseEvent;
 import Project.Client.Interfaces.IPointsEvent;
 import Project.Client.Interfaces.IReadyEvent;
 import Project.Client.Interfaces.IRoomEvents;
+import Project.Client.Interfaces.IBoardEvents;
 import Project.Client.Interfaces.ITimeEvents;
 import Project.Client.Interfaces.ITurnEvent;
 import Project.Common.ConnectionPayload;
 import Project.Common.Constants;
 import Project.Common.LeaderboardPayload;
+import Project.Common.LeaderboardRecord;
 import Project.Common.LoggerUtil;
 import Project.Common.Payload;
 import Project.Common.PayloadType;
@@ -551,7 +553,7 @@ public enum Client {
                     break;
                 case PayloadType.LEADERBOARD:
                     LeaderboardPayload lp = (LeaderboardPayload) payload;
-                    //processLeaderboard(payload.getLeaderboard());
+                    processLeaderboard(lp.getLeaderboard());
                     break;
                 default:
                     break;
@@ -577,8 +579,12 @@ public enum Client {
         return "[Unknown]";
     }
     // payload processors
-    private void processLeaderboard(){
-        //take string[][] and update jtable values
+    private void processLeaderboard(List<LeaderboardRecord> ldr){
+        events.forEach(event ->{
+            if(event instanceof IBoardEvents){
+                ((IBoardEvents) event).onRecieveLeaderboard(ldr);
+            }
+        });
     }
     private void processPoints(long clientId, int points) {
         if (clientId == ClientPlayer.DEFAULT_CLIENT_ID) {

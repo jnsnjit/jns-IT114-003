@@ -142,4 +142,5 @@ public class GameEventsPanel extends JPanel implements IPhaseEvent, IReadyEvent,
         timerText.setText(String.format("%s timer: %s", timerType.name(), time));
         timerText.setVisible(time > 0);
     }
+
 }

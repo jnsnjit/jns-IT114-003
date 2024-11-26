@@ -3,11 +3,13 @@ package Project.Server;
 import java.util.List;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import Project.Common.TimerType;
 import java.util.Map.Entry;
 
+import Project.Common.LeaderboardRecord;
 import Project.Common.LoggerUtil;
 import Project.Common.Phase;
 import Project.Common.TimedEvent;
@@ -22,6 +24,7 @@ public class GameRoom extends BaseGameRoom {
 
     // hashmap of players and there choices, double memory usage though
     protected ConcurrentHashMap<ServerPlayer, Integer> playerChoices = new ConcurrentHashMap<ServerPlayer, Integer>();
+    //protected ConcurrentSkipListMap<ServerPlayer, Integer> playerChoices = new ConcurrentSkipListMap<ServerPlayer, Integer>();
     private int round = 0;
 
     public GameRoom(String name) {
@@ -175,9 +178,21 @@ public class GameRoom extends BaseGameRoom {
         // filled and ready to process
         // Convert map entries to a list for ordered access
         List<Entry<ServerPlayer, Integer>> entries = new ArrayList<>();
+        //need to sort by some metric, sorting by clientID
         for (Entry<ServerPlayer, Integer> entry : playerChoices.entrySet()) {
             entries.add(entry);
         }
+        for (int i = 0; i < entries.size() - 1; i++) {
+            for (int j = 0; j < entries.size() - i - 1; j++) {
+                if ((entries.get(j)).getKey().getClientId() > (entries.get(j + 1)).getKey().getClientId()) {
+                    // Swap elements
+                    Entry<ServerPlayer, Integer> temp = (entries.get(j));
+                    entries.set(j, entries.get(j + 1));
+                    entries.set(j + 1, temp);
+                }
+            }
+        }
+        //orders player choices by client id in ascending order. 1,2,3 ...
         // ATTACK-BASED RPS, "attackers" determine winner and loser"
         // Iterate over each entry and compare with the next one in a circular fashion
         for (int i = 0; i < entries.size(); i++) {
@@ -189,8 +204,10 @@ public class GameRoom extends BaseGameRoom {
             if (currentEntry.getValue().compareTo(nextEntry.getValue()) == 0) {
                 // rolled the same, both players survive
                 LoggerUtil.INSTANCE.info("both players pass");
-            } else if (currentEntry.getValue().compareTo(nextEntry.getValue()) > 0) {
-                // player won the attack
+            } else if ((currentEntry.getValue() + 2 ) %3 == nextEntry.getValue() %3) {
+                // player won the attack   (r1 v s3)(p2 v r1)(s3 v p2)
+                // add point to winner
+                // currentEntry.getKey().addPoint();
                 if (determineWinner(nextEntry, currentEntry)) {
                     break;
                 }
@@ -204,7 +221,11 @@ public class GameRoom extends BaseGameRoom {
         // Display keys with value 1
         // if one player remains, end session, if not, start round with players that did
         // not get elim'd/still in hashmap
-        if (playerChoices.size() == 1) {
+        int playersAlive = 0;
+        for(Entry<ServerPlayer,Integer> k : playerChoices.entrySet()){
+            playersAlive = k.getKey().isAlive() ? ++playersAlive : playersAlive;
+        }
+        if (playersAlive == 1) {
             ServerPlayer winningPlayer = playerChoices.keySet().iterator().next();
             sendGameEvent("Player[" + winningPlayer.getClientId() + "] WON!!!!");
             // instead of removing them, just make the alive value false, change some logic
@@ -212,7 +233,12 @@ public class GameRoom extends BaseGameRoom {
             // playerChoices.remove(winningPlayer);
             LoggerUtil.INSTANCE.info("onRoundEnd() end");
             resetRoundTimer();
-            onSessionEnd();
+            changePhase(Phase.BOARD);
+            createLeaderboard();
+            new TimedEvent(10, () -> {
+                onSessionEnd();
+            });
+            return;
         } else {
             // next round MUST only let players in player choices roll
             // LAST THING TO IMPLEMENT YAYAYYAYAYAYAYY!
@@ -223,37 +249,32 @@ public class GameRoom extends BaseGameRoom {
         }
 
     }
-
-    /** {@inheritDoc} */
-    @Override
-    protected void onSessionEnd() {
-        // now on session end, must display who won, and the points they earned!
-        LoggerUtil.INSTANCE.info("onSessionEnd() start");
-        resetReadyStatus();
-        changePhase(Phase.READY);
-        // only run this game if a game occured
-        if (playersInRoom.size() < 2) {
+    protected void createLeaderboard(){
+        changePhase(Phase.BOARD);
             // Convert map entries to a list for ordered access, contains the player
             List<Entry<Long, ServerPlayer>> entries = new ArrayList<>();
             for (Entry<Long, ServerPlayer> entry : playersInRoom.entrySet()) {
                 entries.add(entry);
             }
             // Sort the list by values (ascending order)
-            String[][] leaderboard = {{}};
-            int placement = 0;
+            List<LeaderboardRecord> table = new ArrayList<>();
             for (Entry<Long, ServerPlayer> entry : entries) {
                 ServerThread st = entry.getValue().getServerThread();
-                leaderboard[placement][0] = st.getClientName();
-                leaderboard[placement][1] = st.getClientId() + "";
-                leaderboard[placement][2] = entry.getValue().getPoints() + " points";
-                placement += 1;
+                LeaderboardRecord leaderboard = new LeaderboardRecord(st.getClientName(), entry.getValue().getPoints());
+                table.add(leaderboard);
             }
+            sendLeaderboard(table);
             //LoggerUtil.INSTANCE.info(leaderboard);
             //send leaderboard to JTable in readyPanel
-            sendLeaderboard(leaderboard);
-        }
-
+    }
+    /** {@inheritDoc} */
+    @Override
+    protected void onSessionEnd() {
+        // now on session end, must display who won, and the points they earned!
+        LoggerUtil.INSTANCE.info("onSessionEnd() start");
+        resetReadyStatus();
         LoggerUtil.INSTANCE.info("onSessionEnd() end");
+        changePhase(Phase.READY);
         // reset all alive values back to true
         Collection<ServerPlayer> players = playersInRoom.values();
         for (ServerPlayer p : players) {
@@ -261,10 +282,11 @@ public class GameRoom extends BaseGameRoom {
             sendReadyStatus(p,false);
             playerChoices.remove(p);
         }
-        //need to reset ready ui so that players are no longer "displayed" as ready.
+        // only run this game if a game occured
+        
     }
     // end lifecycle methods
-
+    
     // send/sync data to ServerPlayer(s)
     // end send data to ServerPlayer(s)
 
@@ -275,10 +297,15 @@ public class GameRoom extends BaseGameRoom {
         // this IS the handle method, at end of this, you can also check if EVERYONE
         // took a turn, if so, enter endround
         ServerPlayer sp = playersInRoom.get(player.getClientId());
-        // handle as well if user is elim'd, if so, they cant play
+        // handle as well if user is elim'd, if so, they cant play, and if they didnt ready up
         if (!sp.isAlive()) {
             List<Long> out = new ArrayList<Long>();
             out.add(player.getClientId());
+            try{
+                checkPlayerIsReady(sp);
+            } catch (Exception e){
+                sendGameEvent("You didnt ready up, so you have to wait until the next round...", out);
+            }
             sendGameEvent("You have been elimanated, and you can not roll again until the game is over.", out);
             return;
         }
@@ -303,14 +330,14 @@ public class GameRoom extends BaseGameRoom {
             onRoundEnd();
         }
     }
-
+    
     private void checkPlayerIsReady(ServerPlayer sp) throws Exception {
         if (!sp.isReady()) {
             sp.sendGameEvent("You weren't ready in time");
             throw new Exception("Player isn't ready");
         }
     }
-
+    
     private void sendGameEvent(String str) {
         sendGameEvent(str, null);
     }
@@ -341,7 +368,7 @@ public class GameRoom extends BaseGameRoom {
             return false;
         });
     }
-    private void sendLeaderboard(String[][] board){
+    private void sendLeaderboard(List<LeaderboardRecord> board){
         playersInRoom.values().removeIf(spInRoom -> {
             boolean canSend = true;
             if (canSend) {
@@ -371,9 +398,12 @@ public class GameRoom extends BaseGameRoom {
         ServerPlayer lPlayer = loser.getKey();
         ServerPlayer wPlayer = winner.getKey();
         lPlayer.setAlive(false);
-        playerChoices.remove(lPlayer);
+        int playersAlive = 0;
+        for(Entry<ServerPlayer,Integer> k : playerChoices.entrySet()){
+            playersAlive = k.getKey().isAlive() ? ++playersAlive : playersAlive;
+        }
         LoggerUtil.INSTANCE.info("first player lost rolls");
-        sendGameEvent("Player [" + lPlayer.getClientId() + "] is ELIMINATED! players left is " + playerChoices.size());
+        sendGameEvent("Player [" + lPlayer.getClientId() + "] is ELIMINATED! players left is " + playersAlive);
         wPlayer.addPoint();
         sendPointsUpdate(wPlayer);
         LoggerUtil.INSTANCE.info("adding point for player who won");
@@ -382,7 +412,7 @@ public class GameRoom extends BaseGameRoom {
         // modulus will check the same case twice, and spit message twice, which is
         // annoying
         // so just checking edge case, if so, break out of for loop
-        if (playerChoices.size() == 1) {
+        if (playersAlive == 1) {
             // if true, must break out of loop to avoid edge case
             return true;
         }

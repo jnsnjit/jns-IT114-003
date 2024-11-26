@@ -1,17 +1,18 @@
 package Project.Common;
-
+import java.util.List;
 public class LeaderboardPayload extends Payload{
-    private String[][] leaderboard;
+    //change to serializible scoreboard
+    private List<LeaderboardRecord> board;
     
     public LeaderboardPayload(){
         setPayloadType(PayloadType.LEADERBOARD);
     }
 
-    public void setLeaderboard(String[][] leaderboard) {
-        this.leaderboard = leaderboard;
+    public List<LeaderboardRecord> getLeaderboard(){
+        return board;
     }
-    public String[][] getLeaderboard(){
-        return leaderboard;
+    public void setLeaderboard(List<LeaderboardRecord> board){
+        this.board = board;
     }
     
 }

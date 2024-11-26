@@ -19,6 +19,7 @@ import Project.Common.TimerPayload;
 import Project.Common.TimerType;
 import Project.Common.Constants;
 import Project.Common.LeaderboardPayload;
+import Project.Common.LeaderboardRecord;
 
 /**
  * A server-side representation of a single client.
@@ -139,8 +140,9 @@ public class ServerThread extends BaseServerThread {
                         ((GameRoom) currentRoom).checkCurrentPhase(this,Phase.MAKE_CHOICE);
                         //will throw exception if room is not in MAKE_CHOICE phase.
                         //now can process command 
-                        ((GameRoom) currentRoom).recieveChoice(this, ((ChoicePayload) payload).getChoice());
+                        ((GameRoom) currentRoom).recieveChoice(this,((ChoicePayload) payload).getChoice());
                     } catch (Exception e) {
+                        LoggerUtil.INSTANCE.severe("Could not process Payload: " + payload, e);
                         sendMessage("You must be in a active GameRoom to use rps command");
                     }
                 default:
@@ -190,7 +192,7 @@ public class ServerThread extends BaseServerThread {
     public boolean sendGameEvent(String str) {
         return sendMessage(Constants.GAME_EVENT_CHANNEL, str);
     }
-    public boolean sendLeaderboard(String[][] board){
+    public boolean sendLeaderboard(List<LeaderboardRecord> board){
         LeaderboardPayload p = new LeaderboardPayload();
         p.setPayloadType(PayloadType.LEADERBOARD);
         p.setLeaderboard(board);
