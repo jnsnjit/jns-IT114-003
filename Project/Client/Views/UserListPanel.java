@@ -21,6 +21,7 @@ import javax.swing.border.EmptyBorder;
 
 import Project.Client.Client;
 import Project.Client.ClientPlayer;
+import Project.Client.Interfaces.IAwayEvent;
 import Project.Client.Interfaces.IPointsEvent;
 import Project.Client.Interfaces.IReadyEvent;
 import Project.Client.Interfaces.ITurnEvent;
@@ -29,7 +30,7 @@ import Project.Common.LoggerUtil;
 /**
  * UserListPanel represents a UI component that displays a list of users.
  */
-public class UserListPanel extends JPanel implements IReadyEvent, IPointsEvent, ITurnEvent {
+public class UserListPanel extends JPanel implements IReadyEvent, IPointsEvent, ITurnEvent, IAwayEvent {
     private JPanel userListArea;
     private GridBagConstraints lastConstraints; // Keep track of the last constraints for the glue
     private HashMap<Long, UserListItem> userItemsMap; // Maintain a map of client IDs to UserListItems
@@ -218,6 +219,17 @@ public class UserListPanel extends JPanel implements IReadyEvent, IPointsEvent, 
         } else if (userItemsMap.containsKey(clientId)) {
             SwingUtilities.invokeLater(() -> {
                 userItemsMap.get(clientId).setTurn(isReady, Color.GREEN);
+            });
+        }
+    }
+    public void onRecieveAway(long clientId, boolean isAway, boolean isQuiet){
+        if (clientId == ClientPlayer.DEFAULT_CLIENT_ID) {
+            SwingUtilities.invokeLater(() -> {
+                userItemsMap.values().forEach(u -> u.setTurn(false));// reset all
+            });
+        } else if (userItemsMap.containsKey(clientId)) {
+            SwingUtilities.invokeLater(() -> {
+                userItemsMap.get(clientId).setTurn(isAway, Color.YELLOW);
             });
         }
     }

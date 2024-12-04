@@ -10,6 +10,8 @@ public class Player {
     private Integer choice;
     private boolean alive = true;
     private int points = 0;
+    //milestone4 adding away status
+    private boolean away = false;
     
     public long getClientId() {
         return clientId;
@@ -25,7 +27,15 @@ public class Player {
     public void setReady(boolean isReady) {
         this.isReady = isReady;
     }
-    
+    public boolean isAway(){
+        return away;
+    }
+    public void setAway(){
+        this.away = away ? false : true;
+    }
+    public void setAway(boolean away){
+        this.away = away;
+    }
     /**
      * Resets all of the data (this is destructive).
      * You may want to make a softer reset for other data
@@ -36,12 +46,11 @@ public class Player {
         this.choice = -1;
         this.points = 0;
         this.alive = true;
+        this.away = false;
     }
     public void softReset(){
         this.isReady = false;
         this.choice = -1;
-        //want room to remember points across ga
-        //this.points = 0;
         this.alive = true;
     }
     public void setChoice(Integer choice){
