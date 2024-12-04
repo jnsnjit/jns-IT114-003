@@ -246,6 +246,16 @@ public abstract class BaseGameRoom extends Room {
             return failedToSend;
         });
     }
+    //sends away status of server player to other players in room
+    protected void sendAwayStatus(ServerPlayer incomingSP, boolean isAway) {
+        playersInRoom.values().removeIf(spInRoom -> {
+            boolean failedToSend = !spInRoom.sendAwayStatus(incomingSP.getClientId(), incomingSP.isAway());
+            if (failedToSend) {
+                removedClient(spInRoom.getServerThread());
+            }
+            return failedToSend;
+        });
+    }
     // end send data to ServerPlayer(s)
 
     // receive data from ServerThread (GameRoom specific)
@@ -271,6 +281,25 @@ public abstract class BaseGameRoom extends Room {
             sendReadyStatus(sp, sp.isReady());
         } catch (Exception e) {
             LoggerUtil.INSTANCE.severe("handleReady exception", e);
+        }
+
+    }
+    //handler for away payload to GameRoom
+    //milestone 4
+    protected void handleAway(ServerThread sender) {
+        try {
+            // early exit checks
+            checkPlayerInRoom(sender);
+            checkCurrentPhase(sender, Phase.READY);
+
+            ServerPlayer sp = null;
+            sp = playersInRoom.get(sender.getClientId());
+            //in player logic, will toggle between either away or not with ternary operator
+            sp.setAway();
+
+            sendAwayStatus(sp,sp.isAway());
+        } catch (Exception e) {
+            LoggerUtil.INSTANCE.severe("handleAway exception", e);
         }
 
     }

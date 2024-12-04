@@ -57,4 +57,15 @@ public class ServerPlayer extends Player{
     public boolean sendLeaderboard(List<LeaderboardRecord> board){
         return client.sendLeaderboard(board);
     }
+    //milestone4 away serverthread wrappers
+    public boolean sendAwayReset(){
+        return client.sendAwayReset();
+    }
+    public boolean sendAwayStatus(long clientId, boolean isAway){
+        return client.sendAwayStatus(clientId, isAway);
+    }
+    public boolean sendAwayStatus(long clientId, boolean isAway, boolean quiet){
+        return client.sendAwayStatus(clientId, isAway, quiet);
+    }
+
 }

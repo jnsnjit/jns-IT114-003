@@ -10,6 +10,7 @@ import Project.Common.Phase;
 import Project.Common.ReadyPayload;
 import Project.Common.RoomResultsPayload;
 import Project.Common.Payload;
+import Project.Common.AwayPayload;
 import Project.Common.ChoicePayload;
 import Project.Common.ConnectionPayload;
 import Project.Common.LoggerUtil;
@@ -145,6 +146,17 @@ public class ServerThread extends BaseServerThread {
                         LoggerUtil.INSTANCE.severe("Could not process Payload: " + payload, e);
                         sendMessage("You must be in a active GameRoom to use rps command");
                     }
+                    break;
+                case AWAY:
+                    // no data needed as the intent will be used as the trigger
+                    try {
+                        // cast to GameRoom as the subclass will handle all Game logic
+                        ((GameRoom) currentRoom).checkCurrentPhase(this,Phase.READY);
+                        ((GameRoom) currentRoom).handleAway(this);
+                    } catch (Exception e) {
+                        sendMessage("You must be in a GameRoom to set away status");
+                    }
+                    break;
                 default:
                     break;
             }
@@ -155,6 +167,49 @@ public class ServerThread extends BaseServerThread {
     }
     // send methods specific to non-chatroom projects
     // send methods specific to non-chatroom
+    public boolean sendAwayReset(){
+        AwayPayload rp = new AwayPayload();
+        rp.setPayloadType(PayloadType.RESET_AWAY);
+        return send(rp);
+    }
+
+    public boolean sendReadyStatus(long clientId, boolean isReady){
+        return sendReadyStatus(clientId, isReady, false);
+    }
+    public boolean sendResetReady(){
+        ReadyPayload rp = new ReadyPayload();
+        rp.setPayloadType(PayloadType.RESET_READY);
+        return send(rp);
+    }
+    /**
+     * Sync ready status of client id
+     * @param clientId who
+     * @param isReady ready or not
+     * @param quiet silently mark ready
+     * @return
+     */
+    public boolean sendReadyStatus(long clientId, boolean isReady, boolean quiet){
+        ReadyPayload rp = new ReadyPayload();
+        rp.setClientId(clientId);
+        rp.setReady(isReady);
+        if(quiet){
+            rp.setPayloadType(PayloadType.SYNC_READY);
+        }
+        return send(rp);
+    }
+    //handler for send away status back to clients
+    public boolean sendAwayStatus(long clientId, boolean isAway){
+        return sendAwayStatus(clientId, isAway, false);
+    }
+    public boolean sendAwayStatus(long clientId, boolean isAway, boolean quiet){
+        AwayPayload rp = new AwayPayload();
+        rp.setClientId(clientId);
+        rp.setAway(isAway);
+        if(quiet){
+            rp.setPayloadType(PayloadType.SYNC_AWAY);
+        }
+        return send(rp);
+    }
     /**
      * Syncs a specific client's points
      * 
@@ -203,31 +258,6 @@ public class ServerThread extends BaseServerThread {
         p.setPayloadType(PayloadType.PHASE);
         p.setMessage(phase.name());
         return send(p);
-    }
-    public boolean sendResetReady(){
-        ReadyPayload rp = new ReadyPayload();
-        rp.setPayloadType(PayloadType.RESET_READY);
-        return send(rp);
-    }
-
-    public boolean sendReadyStatus(long clientId, boolean isReady){
-        return sendReadyStatus(clientId, isReady, false);
-    }
-    /**
-     * Sync ready status of client id
-     * @param clientId who
-     * @param isReady ready or not
-     * @param quiet silently mark ready
-     * @return
-     */
-    public boolean sendReadyStatus(long clientId, boolean isReady, boolean quiet){
-        ReadyPayload rp = new ReadyPayload();
-        rp.setClientId(clientId);
-        rp.setReady(isReady);
-        if(quiet){
-            rp.setPayloadType(PayloadType.SYNC_READY);
-        }
-        return send(rp);
     }
     // send methods to pass data back to the Client
 

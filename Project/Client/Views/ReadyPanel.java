@@ -21,5 +21,17 @@ public class ReadyPanel extends JPanel {
             }
         });
         this.add(readyButton);
+
+        //milestone4, adding away button to be next to ready button.
+        JButton awayButton = new JButton();
+        awayButton.setText("Away");
+        awayButton.addActionListener(l -> {
+            try {
+                Client.INSTANCE.sendAway();
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
+        });
+        this.add(awayButton);
     }
 }

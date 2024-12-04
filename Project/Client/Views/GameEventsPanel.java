@@ -18,6 +18,7 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 
 import Project.Client.Client;
+import Project.Client.Interfaces.IAwayEvent;
 import Project.Client.Interfaces.IMessageEvents;
 import Project.Client.Interfaces.IPhaseEvent;
 import Project.Client.Interfaces.IReadyEvent;
@@ -26,7 +27,7 @@ import Project.Common.Constants;
 import Project.Common.Phase;
 import Project.Common.TimerType;
 
-public class GameEventsPanel extends JPanel implements IPhaseEvent, IReadyEvent, IMessageEvents, ITimeEvents {
+public class GameEventsPanel extends JPanel implements IPhaseEvent, IReadyEvent, IMessageEvents, ITimeEvents, IAwayEvent {
     private JPanel content;
     private boolean debugMode = true; // Set this to false to disable debugging styling
     private JLabel timerText;
@@ -127,6 +128,17 @@ public class GameEventsPanel extends JPanel implements IPhaseEvent, IReadyEvent,
         String clientName = Client.INSTANCE.getClientNameFromId(clientId);
         if(isReady){
             addText(String.format("%s[%s] is ready", clientName, clientId));
+        }
+    }
+    public void onRecieveAway(long clientId, boolean isAway, boolean isQuiet){
+        if(isQuiet){
+            return;
+        }
+        String clientName = Client.INSTANCE.getClientNameFromId(clientId);
+        if(isAway){
+            addText(String.format("%s[%s] is away", clientName, clientId));
+        }else{
+            addText(String.format("%s[%s] is back!", clientName, clientId));
         }
     }
 

@@ -16,5 +16,8 @@ public enum PayloadType {
     CHOICE, // player choice
     TIME, // sync time
     POINTS, // syncs player points
-    LEADERBOARD //send leaderboard information
+    LEADERBOARD, //send leaderboard information
+    AWAY, //send away status
+    SYNC_AWAY, //sync away status for other clients in gameroom
+    RESET_AWAY // reset away status for a client in gameroom
 }

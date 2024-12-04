@@ -20,6 +20,7 @@ import Project.Client.Interfaces.IPhaseEvent;
 import Project.Client.Interfaces.IPointsEvent;
 import Project.Client.Interfaces.IReadyEvent;
 import Project.Client.Interfaces.IRoomEvents;
+import Project.Client.Interfaces.IAwayEvent;
 import Project.Client.Interfaces.IBoardEvents;
 import Project.Client.Interfaces.ITimeEvents;
 import Project.Client.Interfaces.ITurnEvent;
@@ -38,6 +39,7 @@ import Project.Common.TextFX;
 import Project.Common.TextFX.Color;
 import Project.Common.TimerPayload;
 import Project.Common.TimerType;
+import Project.Common.AwayPayload;
 import Project.Common.ChoicePayload;
 
 /**
@@ -79,7 +81,7 @@ public enum Client {
     // other constants
     private final String READY = "ready";
     private final String RPS = "rps";
-
+    private final String AWAY = "away";
     //callback that updates the UI
     private static List<IClientEvents> events = new ArrayList<IClientEvents>();
 
@@ -263,6 +265,11 @@ public enum Client {
                         sendChoice(commandValue);
                         wasCommand = true;
                         break;
+                    //milestone4, new case, client wants to go away
+                    case AWAY:
+                        sendAway();
+                        wasCommand = true;
+                        break;
                 }
                 return wasCommand;
             }
@@ -291,7 +298,11 @@ public enum Client {
         rp.setReady(true); // <- techically not needed as we'll use the payload type as a trigger
         send(rp);
     }
-
+    public void sendAway(){
+        AwayPayload ap = new AwayPayload();
+        ap.setAway(true);
+        send(ap);
+    }
     public void sendChoice(String choice){
         String choicef = choice.toLowerCase();
         ChoicePayload rps = new ChoicePayload();
@@ -555,6 +566,11 @@ public enum Client {
                     LeaderboardPayload lp = (LeaderboardPayload) payload;
                     processLeaderboard(lp.getLeaderboard());
                     break;
+                //milestone4 away processing
+                case PayloadType.AWAY:
+                    AwayPayload ap = (AwayPayload) payload;
+                    processAwayStatus(ap.getClientId(), ap.getAway(), false);
+                    break;
                 default:
                     break;
             }
@@ -583,6 +599,24 @@ public enum Client {
         events.forEach(event ->{
             if(event instanceof IBoardEvents){
                 ((IBoardEvents) event).onRecieveLeaderboard(ldr);
+            }
+        });
+    }
+    private void processAwayStatus(long clientId, boolean isAway, boolean quiet){
+        if (!knownClients.containsKey(clientId)) {
+            LoggerUtil.INSTANCE.severe(String.format("Received away status [%s] for client id %s who is not known",
+                    isAway ? "away" : "not away", clientId));
+            return;
+        }
+        ClientPlayer cp = knownClients.get(clientId);
+        cp.setAway(isAway);
+        if (!quiet) {
+            System.out.println(String.format("%s[%s] is %s", cp.getClientName(), cp.getClientId(),
+                    isAway ? "away" : "not away"));
+        }
+        events.forEach(event -> {
+            if (event instanceof IReadyEvent) {
+                ((IAwayEvent) event).onRecieveAway(clientId, isAway, quiet);
             }
         });
     }
