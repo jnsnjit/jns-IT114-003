@@ -27,6 +27,9 @@ public class GameRoom extends BaseGameRoom {
     //protected ConcurrentSkipListMap<ServerPlayer, Integer> playerChoices = new ConcurrentSkipListMap<ServerPlayer, Integer>();
     private int round = 0;
 
+    //comment for the future, want logic of rps to be based on players readying up first, instead of player ID, 
+    //maybe add attribute like time attribute to player?
+
     public GameRoom(String name) {
         super(name);
     }
@@ -298,6 +301,11 @@ public class GameRoom extends BaseGameRoom {
         // took a turn, if so, enter endround
         ServerPlayer sp = playersInRoom.get(player.getClientId());
         // handle as well if user is elim'd, if so, they cant play, and if they didnt ready up
+        if(sp.isAway()){
+            List<Long> out = new ArrayList<Long>();
+            out.add(player.getClientId());
+            sendGameEvent("You are currently marked as away and can't play until the round is over", out);
+        }
         if (!sp.isAlive()) {
             List<Long> out = new ArrayList<Long>();
             out.add(player.getClientId());
