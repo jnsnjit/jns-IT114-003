@@ -294,6 +294,19 @@ public class GameRoom extends BaseGameRoom {
     // end send data to ServerPlayer(s)
 
     // receive data from ServerThread (GameRoom specific)
+    protected void handleCooldown(ServerThread sender){
+        try {
+            // early exit checks
+            checkPlayerInRoom(sender);
+            checkCurrentPhase(sender, Phase.READY);
+
+            cooldownGame = true;
+            sendGameEvent("10 Second Choice Cooldowns are enabled");
+        } catch (Exception e) {
+            LoggerUtil.INSTANCE.severe("handleAway exception", e);
+        }
+
+    }
     protected synchronized void recieveChoice(ServerThread player, Integer choice) {
         // based of user who called (need id), check and process their rps command and
         // store their choice

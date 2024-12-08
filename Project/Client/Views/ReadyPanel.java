@@ -1,5 +1,6 @@
 package Project.Client.Views;
 
+import java.awt.Choice;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -33,5 +34,16 @@ public class ReadyPanel extends JPanel {
             }
         });
         this.add(awayButton);
+
+        //milestone4, adding button to able button cooldown feature for game
+        JButton ChoiceCooldownsButton = new JButton();
+        ChoiceCooldownsButton.setText("Enable 10 Second Cooldown for RPS commands");
+        ChoiceCooldownsButton.addActionListener(l -> {
+            try {
+                Client.INSTANCE.sendCooldownModifier();
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
+        });
     }
 }

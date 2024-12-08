@@ -288,6 +288,11 @@ public enum Client {
             }
         });
     }
+    //milestone4, cooldown payload
+    public void sendCooldownModifier(){
+        CooldownPayload clp = new CooldownPayload();
+        send(clp);
+    }
     // send methods to pass data to the ServerThread
     /**
      * Sends the client's intent to be ready.

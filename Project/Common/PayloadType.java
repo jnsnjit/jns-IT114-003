@@ -19,5 +19,6 @@ public enum PayloadType {
     LEADERBOARD, //send leaderboard information
     AWAY, //send away status
     SYNC_AWAY, //sync away status for other clients in gameroom
-    RESET_AWAY // reset away status for a client in gameroom
+    RESET_AWAY, // reset away status for a client in gameroom
+    COOLDOWN // cooldown enabler for gameroom
 }
