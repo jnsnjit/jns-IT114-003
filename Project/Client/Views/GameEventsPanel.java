@@ -19,15 +19,17 @@ import javax.swing.SwingUtilities;
 
 import Project.Client.Client;
 import Project.Client.Interfaces.IAwayEvent;
+import Project.Client.Interfaces.ICooldownEvent;
 import Project.Client.Interfaces.IMessageEvents;
 import Project.Client.Interfaces.IPhaseEvent;
 import Project.Client.Interfaces.IReadyEvent;
 import Project.Client.Interfaces.ITimeEvents;
+
 import Project.Common.Constants;
 import Project.Common.Phase;
 import Project.Common.TimerType;
 
-public class GameEventsPanel extends JPanel implements IPhaseEvent, IReadyEvent, IMessageEvents, ITimeEvents, IAwayEvent {
+public class GameEventsPanel extends JPanel implements IPhaseEvent, IReadyEvent, IMessageEvents, ITimeEvents, IAwayEvent, ICooldownEvent {
     private JPanel content;
     private boolean debugMode = true; // Set this to false to disable debugging styling
     private JLabel timerText;
@@ -154,5 +156,12 @@ public class GameEventsPanel extends JPanel implements IPhaseEvent, IReadyEvent,
         timerText.setText(String.format("%s timer: %s", timerType.name(), time));
         timerText.setVisible(time > 0);
     }
-
+    public void onReciveeCooldown(long clientId, boolean cooldown, boolean isQuiet){
+        if(isQuiet){
+            return;
+        }
+        String clientName = Client.INSTANCE.getClientNameFromId(clientId);
+        addText(String.format("%s[%s]: Gameroom has %s ten second choice cooldowns", clientName, clientId,
+        cooldown ? "enabled" : "disabled"));
+    }
 }

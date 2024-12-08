@@ -67,5 +67,10 @@ public class ServerPlayer extends Player{
     public boolean sendAwayStatus(long clientId, boolean isAway, boolean quiet){
         return client.sendAwayStatus(clientId, isAway, quiet);
     }
-
+    public boolean sendCooldown(long clientId, boolean cooldown){
+        return client.sendCooldown(clientId, cooldown);
+    }
+    public boolean sendCooldown(long clientId, boolean cooldown, boolean quiet){
+        return client.sendCooldown(clientId, cooldown, quiet);
+    }
 }

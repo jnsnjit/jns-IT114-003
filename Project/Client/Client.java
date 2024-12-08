@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 
 import Project.Client.Interfaces.IClientEvents;
 import Project.Client.Interfaces.IConnectionEvents;
+import Project.Client.Interfaces.ICooldownEvent;
 import Project.Client.Interfaces.IMessageEvents;
 import Project.Client.Interfaces.IPhaseEvent;
 import Project.Client.Interfaces.IPointsEvent;
@@ -26,6 +27,7 @@ import Project.Client.Interfaces.ITimeEvents;
 import Project.Client.Interfaces.ITurnEvent;
 import Project.Common.ConnectionPayload;
 import Project.Common.Constants;
+import Project.Common.CooldownPayload;
 import Project.Common.LeaderboardPayload;
 import Project.Common.LeaderboardRecord;
 import Project.Common.LoggerUtil;
@@ -68,7 +70,7 @@ public enum Client {
     private ConcurrentHashMap<Long, ClientPlayer> knownClients = new ConcurrentHashMap<>();
     private ClientPlayer myData;
     private Phase currentPhase = Phase.READY;
-
+    public boolean cooldown = false;
     // constants (used to reduce potential types when using them in code)
     private final String COMMAND_CHARACTER = "/";
     private final String CREATE_ROOM = "createroom";
@@ -82,6 +84,7 @@ public enum Client {
     private final String READY = "ready";
     private final String RPS = "rps";
     private final String AWAY = "away";
+    private final String COOLDOWN = "cooldown";
     //callback that updates the UI
     private static List<IClientEvents> events = new ArrayList<IClientEvents>();
 
@@ -268,6 +271,10 @@ public enum Client {
                     //milestone4, new case, client wants to go away
                     case AWAY:
                         sendAway();
+                        wasCommand = true;
+                        break;
+                    case COOLDOWN:
+                        sendCooldownModifier();
                         wasCommand = true;
                         break;
                 }
@@ -576,6 +583,10 @@ public enum Client {
                     AwayPayload ap = (AwayPayload) payload;
                     processAwayStatus(ap.getClientId(), ap.getAway(), false);
                     break;
+                case PayloadType.COOLDOWN:
+                    CooldownPayload clp = (CooldownPayload) payload;
+                    processCooldown(clp.getClientId(),clp.getCooldown(),false);
+                    break;
                 default:
                     break;
             }
@@ -607,6 +618,24 @@ public enum Client {
             }
         });
     }
+    private void processCooldown(long clientId, boolean cooldown, boolean quiet){
+        //client now knows what gameroom has for cooldown status
+        this.cooldown = cooldown;
+        if (!knownClients.containsKey(clientId)) {
+            LoggerUtil.INSTANCE.severe(String.format("Received cooldown status [%s] for client id %s who is not known"));
+            return;
+        }
+        ClientPlayer cp = knownClients.get(clientId);
+        if (!quiet) {
+            System.out.println(String.format("%s[%s]: Gameroom has %s ten second choice cooldowns", cp.getClientName(), cp.getClientId(),
+                    cooldown ? "enabled" : "disabled"));
+        }
+        events.forEach(event -> {
+            if (event instanceof ICooldownEvent) {
+                ((ICooldownEvent) event).onReciveeCooldown(clientId, cooldown, quiet);
+            }
+        });
+    }
     private void processAwayStatus(long clientId, boolean isAway, boolean quiet){
         if (!knownClients.containsKey(clientId)) {
             LoggerUtil.INSTANCE.severe(String.format("Received away status [%s] for client id %s who is not known",
@@ -620,7 +649,7 @@ public enum Client {
                     isAway ? "away" : "not away"));
         }
         events.forEach(event -> {
-            if (event instanceof IReadyEvent) {
+            if (event instanceof IAwayEvent) {
                 ((IAwayEvent) event).onRecieveAway(clientId, isAway, quiet);
             }
         });

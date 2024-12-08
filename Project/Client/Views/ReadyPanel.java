@@ -45,5 +45,6 @@ public class ReadyPanel extends JPanel {
                 e1.printStackTrace();
             }
         });
+        this.add(ChoiceCooldownsButton);
     }
 }

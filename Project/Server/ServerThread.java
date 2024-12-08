@@ -177,6 +177,18 @@ public class ServerThread extends BaseServerThread {
     }
     // send methods specific to non-chatroom projects
     // send methods specific to non-chatroom
+    public boolean sendCooldown(long clientID, boolean cooldown){
+        return sendCooldown(clientID, cooldown,false);
+    }
+    public boolean sendCooldown(long clientId, boolean cooldown, boolean quiet){
+        CooldownPayload rp = new CooldownPayload();
+        rp.setClientId(clientId);
+        rp.setCooldown(cooldown);
+        if(quiet){
+            rp.setPayloadType(PayloadType.COOLDOWN);
+        }
+        return send(rp);
+    }
     public boolean sendAwayReset(){
         AwayPayload rp = new AwayPayload();
         rp.setPayloadType(PayloadType.RESET_AWAY);

@@ -46,7 +46,7 @@ public class GamePanel extends JPanel implements IRoomEvents, IPhaseEvent, IBoar
         rockButton.addActionListener(event->{
             try {
                 buttonCooldown("rock");
-                buttonTimer = new TimedEvent(10, () -> buttonCooldown(true, "rock"));
+                buttonTimer = Client.INSTANCE.cooldown ? new TimedEvent(10, () -> buttonCooldown(true, "rock")) : null;
             } catch (Exception e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -58,7 +58,7 @@ public class GamePanel extends JPanel implements IRoomEvents, IPhaseEvent, IBoar
         paperButton.addActionListener(event ->{
             try{
                 buttonCooldown("paper");
-                buttonTimer = new TimedEvent(10, () -> buttonCooldown(true, "paper"));
+                buttonTimer = Client.INSTANCE.cooldown ? new TimedEvent(10, () -> buttonCooldown(true, "paper")) : null;
             } catch (Exception e) {
                 // auto catch problems
                 e.printStackTrace();
@@ -70,7 +70,7 @@ public class GamePanel extends JPanel implements IRoomEvents, IPhaseEvent, IBoar
         scissorsButton.addActionListener(event ->{
             try{
                 buttonCooldown("scissors");
-                buttonTimer = new TimedEvent(10, () -> buttonCooldown(true,"scissors"));
+                buttonTimer = Client.INSTANCE.cooldown ? new TimedEvent(10, () -> buttonCooldown(true,"scissors")) : null;
             } catch (Exception e) {
                 // auto catch problems
                 e.printStackTrace();
@@ -187,11 +187,15 @@ public class GamePanel extends JPanel implements IRoomEvents, IPhaseEvent, IBoar
         buttonCooldown(choice);
     }
     public void buttonCooldown(String choice){
-        if(canClick){
-            canClick = false;
+        if(Client.INSTANCE.cooldown){
+            if(canClick){
+                canClick = false;
+                Client.INSTANCE.sendChoice(choice);
+                //Client.INSTANCE.sendMessage("Button is now on a ten second cooldown");
+                Client.INSTANCE.clientSideGameEvent("Button is now on a ten second cooldown");
+            }
+        }else{
             Client.INSTANCE.sendChoice(choice);
-            //Client.INSTANCE.sendMessage("Button is now on a ten second cooldown");
-            Client.INSTANCE.clientSideGameEvent("Button is now on a ten second cooldown");
         }
     }
 }

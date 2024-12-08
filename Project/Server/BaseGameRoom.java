@@ -204,7 +204,15 @@ public abstract class BaseGameRoom extends Room {
         return failedToSend;
         });
     }
-
+    protected void sendCooldown(ServerThread sp, boolean cooldownStatus){
+        playersInRoom.values().removeIf(spInRoom -> {
+            boolean failedToSend = !spInRoom.sendCooldown(spInRoom.getClientId(),cooldownStatus);
+            if (failedToSend) {
+                removedClient(spInRoom.getServerThread());
+            }
+            return failedToSend;
+            });
+    }
     /**
      * A shorthand way of telling all clients to reset their local list's ready status
      */
@@ -283,6 +291,22 @@ public abstract class BaseGameRoom extends Room {
             sendReadyStatus(sp, sp.isReady());
         } catch (Exception e) {
             LoggerUtil.INSTANCE.severe("handleReady exception", e);
+        }
+
+    }
+    //milestone4
+    // receive data from ServerThread (GameRoom specific)
+    protected void handleCooldown(ServerThread sender){
+        try {
+            // early exit checks
+            checkPlayerInRoom(sender);
+            checkCurrentPhase(sender, Phase.READY);
+
+            cooldownGame = cooldownGame ? false : true;
+            sendCooldown(sender, cooldownGame);
+            //send
+        } catch (Exception e) {
+            LoggerUtil.INSTANCE.severe("handleAway exception", e);
         }
 
     }
