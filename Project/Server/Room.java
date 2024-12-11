@@ -11,7 +11,7 @@ public class Room implements AutoCloseable{
 
     public final static String LOBBY = "lobby";
 
-    private void info(String message) {
+    protected void info(String message) {
         LoggerUtil.INSTANCE.info(String.format("Room[%s]: %s", name, message));
     }
 
@@ -25,7 +25,7 @@ public class Room implements AutoCloseable{
         return this.name;
     }
 
-    protected synchronized void addClient(ServerThread client) {
+    protected synchronized void addClient(ServerThread client, boolean spectator) {
         if (!isRunning) { // block action if Room isn't running
             return;
         }
@@ -226,7 +226,11 @@ public class Room implements AutoCloseable{
             sender.sendMessage(String.format("Room %s doesn't exist", room));
         }
     }
-
+    protected void handleJoinRoomSpectator(ServerThread sender, String room){
+        if(!Server.INSTANCE.joinRoomAsSpectator(room, sender, true)){
+            sender.sendMessage(String.format("Room %s doesn't exist", room));
+        }
+    }
     protected void handleListRooms(ServerThread sender, String roomQuery){
         sender.sendRooms(Server.INSTANCE.listRooms(roomQuery));
     }

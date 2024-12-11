@@ -8,6 +8,8 @@ import javax.swing.JEditorPane;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
+import Project.Client.Client;
+
 /**
  * UserListItem represents a user entry in the user list.
  */
@@ -25,7 +27,11 @@ public class UserListItem extends JPanel {
      */
     public UserListItem(long clientId, String clientName, JPanel parent) {
         textContainer = new JEditorPane("text/plain", clientName);
-        textContainer.setName(Long.toString(clientId));
+        if(Client.INSTANCE.myData.getSpectator()){
+            textContainer.setName("(Spectator) " +Long.toString(clientId));
+        }else{
+            textContainer.setName(Long.toString(clientId));
+        }
         textContainer.setEditable(false);
         textContainer.setBorder(new EmptyBorder(0, 0, 0, 0)); // Add padding
 
@@ -79,13 +85,19 @@ public class UserListItem extends JPanel {
             pointsPanel.setText("0");
             pointsPanel.setVisible(false);
         } else {
-            pointsPanel.setText(points + "");
+            pointsPanel.setText("points: " + points + "");
             if(!pointsPanel.isVisible()){
                 pointsPanel.setVisible(true);
                 invalidate();
             }
             
         }
+        repaint();
+    }
+    //paints user text blue if the client is a spectator
+    //milestone4
+    public void isSpectator(Long clientId){
+        textContainer.setText("(Spectator)" + Long.toString(clientId));
         repaint();
     }
 }

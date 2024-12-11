@@ -120,6 +120,9 @@ public class ServerThread extends BaseServerThread {
                 case ROOM_JOIN:
                     currentRoom.handleJoinRoom(this, payload.getMessage());
                     break;
+                case ROOM_SJOIN:
+                    currentRoom.handleJoinRoomSpectator(this, payload.getMessage());
+                    break;
                 case ROOM_LIST:
                     currentRoom.handleListRooms(this, payload.getMessage());
                     break;

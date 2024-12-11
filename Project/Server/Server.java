@@ -141,10 +141,22 @@ public enum Server {
             current.removedClient(client);
         }
         Room next = rooms.get(nameCheck);
-        next.addClient(client);
+        next.addClient(client, false);
         return true;
     }
-
+    protected boolean joinRoomAsSpectator(String name, ServerThread client, boolean isSpect){
+        final String nameCheck = name.toLowerCase();
+        if (!rooms.containsKey(nameCheck)) {
+            return false;
+        }
+        Room current = client.getCurrentRoom();
+        if (current != null) {
+            current.removedClient(client);
+        }
+        Room next = rooms.get(nameCheck);
+        next.addClient(client, true);
+        return true;
+    }
     protected List<String> listRooms(String roomQuery) {
         final String nameCheck = roomQuery.toLowerCase();
         return rooms.values().stream()

@@ -7,6 +7,7 @@ public enum PayloadType {
     DISCONNECT,  // distinct disconnect action
     ROOM_CREATE,
     ROOM_JOIN, // join/leave room based on boolean
+    ROOM_SJOIN, // milestone4, thread will attempt to join as a spectator
     MESSAGE, // sender and message,
     ROOM_LIST, // client: query for rooms, server: result of query,
     READY, // client to trigger themselves as ready, server to sync the related status of a particular client

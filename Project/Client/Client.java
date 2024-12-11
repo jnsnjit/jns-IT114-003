@@ -68,13 +68,14 @@ public enum Client {
     final Pattern localhostPattern = Pattern.compile("/connect\\s+(localhost:\\d{3,5})");
     private volatile boolean isRunning = true; // volatile for thread-safe visibility
     private ConcurrentHashMap<Long, ClientPlayer> knownClients = new ConcurrentHashMap<>();
-    private ClientPlayer myData;
+    public ClientPlayer myData;
     private Phase currentPhase = Phase.READY;
     public boolean cooldown = false;
     // constants (used to reduce potential types when using them in code)
     private final String COMMAND_CHARACTER = "/";
     private final String CREATE_ROOM = "createroom";
     private final String JOIN_ROOM = "joinroom";
+    private final String JOIN_ROOM_AS_SPECTATOR = "sjoinroom";
     private final String LIST_ROOMS = "listrooms";
     private final String DISCONNECT = "disconnect";
     private final String LOGOFF = "logoff";
@@ -248,6 +249,10 @@ public enum Client {
                         sendJoinRoom(commandValue);
                         wasCommand = true;
                         break;
+                    case JOIN_ROOM_AS_SPECTATOR:
+                        sendJoinRoom(commandValue);
+                        wasCommand = true;
+                        break;
                     case LIST_ROOMS:
                         sendListRooms(commandValue);
                         wasCommand = true;
@@ -358,6 +363,17 @@ public enum Client {
         Payload p = new Payload();
         p.setPayloadType(PayloadType.ROOM_JOIN);
         p.setMessage(room);
+        //probably a bad way to handle this data but it should work in theory
+        //milestone4
+        myData.setSpectator(false);
+        send(p);
+    }
+    //milestone4, join room as a spectator, new button in ui for this option
+    public void sendJoinRoomAsSpectator(String room){
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.ROOM_SJOIN);
+        p.setMessage(room);
+        myData.setSpectator(true);
         send(p);
     }
 
