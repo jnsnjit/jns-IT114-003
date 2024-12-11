@@ -23,13 +23,16 @@ import Project.Client.Interfaces.IRoomEvents;
 import Project.Common.Constants;
 import Project.Common.LeaderboardRecord;
 import Project.Common.Phase;
+import Project.Common.TimedEvent;
 
 public class GamePanel extends JPanel implements IRoomEvents, IPhaseEvent, IBoardEvents {
 
     private JPanel playPanel;
     private JPanel scorePanel;
     private JTable scoreTable;
+    private boolean canClick = true;
     private CardLayout cardLayout;
+    public TimedEvent buttonTimer = null;
     private static final String READY_PANEL = "READY";
     private static final String PLAY_PANEL = "PLAY";//example panel for this lesson
     private static final String BOARD_PANEL = "LEADERBOARD";
@@ -42,7 +45,8 @@ public class GamePanel extends JPanel implements IRoomEvents, IPhaseEvent, IBoar
         JButton rockButton = new JButton("Rock");
         rockButton.addActionListener(event->{
             try {
-                Client.INSTANCE.sendChoice("rock");
+                buttonCooldown("rock");
+                buttonTimer = Client.INSTANCE.cooldown ? new TimedEvent(10, () -> buttonCooldown(true, "rock")) : null;
             } catch (Exception e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -53,7 +57,8 @@ public class GamePanel extends JPanel implements IRoomEvents, IPhaseEvent, IBoar
         JButton paperButton = new JButton("Paper");
         paperButton.addActionListener(event ->{
             try{
-                Client.INSTANCE.sendChoice("paper");
+                buttonCooldown("paper");
+                buttonTimer = Client.INSTANCE.cooldown ? new TimedEvent(10, () -> buttonCooldown(true, "paper")) : null;
             } catch (Exception e) {
                 // auto catch problems
                 e.printStackTrace();
@@ -64,7 +69,8 @@ public class GamePanel extends JPanel implements IRoomEvents, IPhaseEvent, IBoar
         JButton scissorsButton = new JButton("Scissors");
         scissorsButton.addActionListener(event ->{
             try{
-                Client.INSTANCE.sendChoice("scissors");
+                buttonCooldown("scissors");
+                buttonTimer = Client.INSTANCE.cooldown ? new TimedEvent(10, () -> buttonCooldown(true,"scissors")) : null;
             } catch (Exception e) {
                 // auto catch problems
                 e.printStackTrace();
@@ -174,5 +180,22 @@ public class GamePanel extends JPanel implements IRoomEvents, IPhaseEvent, IBoar
             rank++;
         }
         cardLayout.show(playPanel.getParent(), BOARD_PANEL);
+    }
+    //milestone 4 stuff, button that stops UI from submiting multiple choices within a timeframe, happens client side.
+    public void buttonCooldown(boolean canClick, String choice){
+        canClick = true;
+        buttonCooldown(choice);
+    }
+    public void buttonCooldown(String choice){
+        if(Client.INSTANCE.cooldown){
+            if(canClick){
+                canClick = false;
+                Client.INSTANCE.sendChoice(choice);
+                //Client.INSTANCE.sendMessage("Button is now on a ten second cooldown");
+                Client.INSTANCE.clientSideGameEvent("Button is now on a ten second cooldown");
+            }
+        }else{
+            Client.INSTANCE.sendChoice(choice);
+        }
     }
 }

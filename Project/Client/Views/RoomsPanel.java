@@ -124,12 +124,33 @@ public class RoomsPanel extends JPanel {
                 }
             });
         });
+        //milestone 4, new option for client to join as a spectator
+        JButton joinAsSpectatorButton = new JButton("Join as a Spectator");
+        joinAsSpectatorButton.addActionListener(event -> {
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    String query = searchValue.getText().trim();
+                    if (!query.isEmpty()) {
+                        Client.INSTANCE.sendJoinRoomAsSpectator(query);
+                        message.setText("Joined room as spectator");
+                    } else {
+                        message.setText("Can't join a room without a name");
+                    }
+                } catch (NullPointerException ne) {
+                    message.setText("Not connected");
+                } catch (Exception e) {
+                    LoggerUtil.INSTANCE.warning("Not connected", e);
+                    message.setText("Error sending request: " + e.getMessage());
+                }
+            });
+        });
 
         searchContent.add(searchLabel);
         searchContent.add(searchValue);
         searchContent.add(searchButton);
         searchContent.add(createButton);
         searchContent.add(joinButton);
+        searchContent.add(joinAsSpectatorButton);
         search.add(searchContent);
         messageContainer.add(message);
         search.add(messageContainer);

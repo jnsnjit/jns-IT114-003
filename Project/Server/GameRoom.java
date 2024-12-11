@@ -4,6 +4,8 @@ import java.util.List;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.logging.Logger;
+import java.lang.reflect.Executable;
 import java.util.ArrayList;
 import java.util.Collection;
 import Project.Common.TimerType;
@@ -27,6 +29,9 @@ public class GameRoom extends BaseGameRoom {
     //protected ConcurrentSkipListMap<ServerPlayer, Integer> playerChoices = new ConcurrentSkipListMap<ServerPlayer, Integer>();
     private int round = 0;
 
+    //comment for the future, want logic of rps to be based on players readying up first, instead of player ID, 
+    //maybe add attribute like time attribute to player?
+
     public GameRoom(String name) {
         super(name);
     }
@@ -46,12 +51,27 @@ public class GameRoom extends BaseGameRoom {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
-                syncCurrentPhase(sp);
+                syncCurrentPhase(sp.getServerThread());
                 syncReadyStatus(sp);
             }
         }.start();
     }
-
+    @Override
+    protected void onSpectatorAdded(ServerSpectator ss){
+        //syncing for spectators, need less things from the room
+        new Thread(){
+            @Override
+            public void run(){
+                try{
+                    Thread.sleep(100);
+                } catch (InterruptedException e){
+                    e.printStackTrace();
+                }
+                //figure this out bruh
+                syncCurrentPhase(ss.getServerThread());
+            }
+        }.start();
+    }
     /** {@inheritDoc} */
     @Override
     protected void onClientRemoved(ServerPlayer sp) {
@@ -64,6 +84,11 @@ public class GameRoom extends BaseGameRoom {
             resetRoundTimer();
             onSessionEnd();
         }
+    }
+    @Override
+    protected void onSpectatorRemoved(ServerSpectator ss){
+        // special to remove spectators
+        LoggerUtil.INSTANCE.info("Spectator removed, remaing: " + spectatorsInRoom.size());
     }
 
     // timer handlers
@@ -290,14 +315,27 @@ public class GameRoom extends BaseGameRoom {
     // send/sync data to ServerPlayer(s)
     // end send data to ServerPlayer(s)
 
-    // receive data from ServerThread (GameRoom specific)
     protected synchronized void recieveChoice(ServerThread player, Integer choice) {
         // based of user who called (need id), check and process their rps command and
         // store their choice
         // this IS the handle method, at end of this, you can also check if EVERYONE
         // took a turn, if so, enter endround
+        //adding additional check bc they saved me for milestone4!!
+        try{
+            checkPlayerInRoom(player);
+            checkCurrentPhase(player, Phase.MAKE_CHOICE);
+        } catch(Exception e) {
+            LoggerUtil.INSTANCE.severe("exception handled, probably spectator trying to send choice", e);
+        }
+
         ServerPlayer sp = playersInRoom.get(player.getClientId());
         // handle as well if user is elim'd, if so, they cant play, and if they didnt ready up
+        if(sp.isAway()){
+            List<Long> out = new ArrayList<Long>();
+            out.add(player.getClientId());
+            sendGameEvent("You are currently marked as away and can't play until the round is over", out);
+            return;
+        }
         if (!sp.isAlive()) {
             List<Long> out = new ArrayList<Long>();
             out.add(player.getClientId());

@@ -8,16 +8,16 @@ import Project.Common.TimerType;
 import java.util.List;
 
 /**
- * Server-only data about a player
+ * Server-only data about a         !spectator!
  * Added in ReadyCheck lesson/branch for non-chatroom projects.
  * If chatroom projects want to follow this design update the following in this lesson:
  * Player class renamed to User
  * clientPlayer class renamed to ClientUser (or the original ClientData)
  * ServerPlayer class renamed to ServerUser
  */
-public class ServerPlayer extends Player{
+public class ServerSpectator extends Player{
     private ServerThread client; // reference to wrapped ServerThread
-    public ServerPlayer(ServerThread clientToWrap){
+    public ServerSpectator(ServerThread clientToWrap){
         client = clientToWrap;
         setClientId(client.getClientId());
     }

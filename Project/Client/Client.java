@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 
 import Project.Client.Interfaces.IClientEvents;
 import Project.Client.Interfaces.IConnectionEvents;
+import Project.Client.Interfaces.ICooldownEvent;
 import Project.Client.Interfaces.IMessageEvents;
 import Project.Client.Interfaces.IPhaseEvent;
 import Project.Client.Interfaces.IPointsEvent;
@@ -27,6 +28,7 @@ import Project.Client.Interfaces.ITimeEvents;
 import Project.Client.Interfaces.ITurnEvent;
 import Project.Common.ConnectionPayload;
 import Project.Common.Constants;
+import Project.Common.CooldownPayload;
 import Project.Common.LeaderboardPayload;
 import Project.Common.LeaderboardRecord;
 import Project.Common.LoggerUtil;
@@ -67,13 +69,14 @@ public enum Client {
     final Pattern localhostPattern = Pattern.compile("/connect\\s+(localhost:\\d{3,5})");
     private volatile boolean isRunning = true; // volatile for thread-safe visibility
     private ConcurrentHashMap<Long, ClientPlayer> knownClients = new ConcurrentHashMap<>();
-    private ClientPlayer myData;
+    public ClientPlayer myData;
     private Phase currentPhase = Phase.READY;
-
+    public boolean cooldown = false;
     // constants (used to reduce potential types when using them in code)
     private final String COMMAND_CHARACTER = "/";
     private final String CREATE_ROOM = "createroom";
     private final String JOIN_ROOM = "joinroom";
+    private final String JOIN_ROOM_AS_SPECTATOR = "sjoinroom";
     private final String LIST_ROOMS = "listrooms";
     private final String DISCONNECT = "disconnect";
     private final String LOGOFF = "logoff";
@@ -83,6 +86,7 @@ public enum Client {
     private final String READY = "ready";
     private final String RPS = "rps";
     private final String AWAY = "away";
+    private final String COOLDOWN = "cooldown";
     //callback that updates the UI
     private static List<IClientEvents> events = new ArrayList<IClientEvents>();
 
@@ -246,6 +250,10 @@ public enum Client {
                         sendJoinRoom(commandValue);
                         wasCommand = true;
                         break;
+                    case JOIN_ROOM_AS_SPECTATOR:
+                        sendJoinRoom(commandValue);
+                        wasCommand = true;
+                        break;
                     case LIST_ROOMS:
                         sendListRooms(commandValue);
                         wasCommand = true;
@@ -271,6 +279,10 @@ public enum Client {
                         sendAway();
                         wasCommand = true;
                         break;
+                    case COOLDOWN:
+                        sendCooldownModifier();
+                        wasCommand = true;
+                        break;
                 }
                 return wasCommand;
             }
@@ -288,6 +300,11 @@ public enum Client {
                 ((IMessageEvents) event).onMessageReceive(Constants.GAME_EVENT_CHANNEL, str);
             }
         });
+    }
+    //milestone4, cooldown payload
+    public void sendCooldownModifier(){
+        CooldownPayload clp = new CooldownPayload();
+        send(clp);
     }
     // send methods to pass data to the ServerThread
     /**
@@ -347,6 +364,17 @@ public enum Client {
         Payload p = new Payload();
         p.setPayloadType(PayloadType.ROOM_JOIN);
         p.setMessage(room);
+        //probably a bad way to handle this data but it should work in theory
+        //milestone4
+        myData.setSpectator(false);
+        send(p);
+    }
+    //milestone4, join room as a spectator, new button in ui for this option
+    public void sendJoinRoomAsSpectator(String room){
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.ROOM_SJOIN);
+        p.setMessage(room);
+        myData.setSpectator(true);
         send(p);
     }
 
@@ -572,6 +600,9 @@ public enum Client {
                     AwayPayload ap = (AwayPayload) payload;
                     processAwayStatus(ap.getClientId(), ap.getAway(), false);
                     break;
+                case PayloadType.COOLDOWN:
+                    CooldownPayload clp = (CooldownPayload) payload;
+                    processCooldown(clp.getClientId(),clp.getCooldown(),false);
                 case PayloadType.TIME:
                     TimerPayload tp = (TimerPayload) payload;
                     processCurrentTimer(tp.getTimerType(), tp.getTime());
@@ -611,6 +642,24 @@ public enum Client {
             }
         });
     }
+    private void processCooldown(long clientId, boolean cooldown, boolean quiet){
+        //client now knows what gameroom has for cooldown status
+        this.cooldown = cooldown;
+        if (!knownClients.containsKey(clientId)) {
+            LoggerUtil.INSTANCE.severe(String.format("Received cooldown status [%s] for client id %s who is not known"));
+            return;
+        }
+        ClientPlayer cp = knownClients.get(clientId);
+        if (!quiet) {
+            System.out.println(String.format("%s[%s]: Gameroom has %s ten second choice cooldowns", cp.getClientName(), cp.getClientId(),
+                    cooldown ? "enabled" : "disabled"));
+        }
+        events.forEach(event -> {
+            if (event instanceof ICooldownEvent) {
+                ((ICooldownEvent) event).onReciveeCooldown(clientId, cooldown, quiet);
+            }
+        });
+    }
     private void processAwayStatus(long clientId, boolean isAway, boolean quiet){
         if (!knownClients.containsKey(clientId)) {
             LoggerUtil.INSTANCE.severe(String.format("Received away status [%s] for client id %s who is not known",
@@ -624,7 +673,7 @@ public enum Client {
                     isAway ? "away" : "not away"));
         }
         events.forEach(event -> {
-            if (event instanceof IReadyEvent) {
+            if (event instanceof IAwayEvent) {
                 ((IAwayEvent) event).onRecieveAway(clientId, isAway, quiet);
             }
         });

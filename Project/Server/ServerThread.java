@@ -19,6 +19,7 @@ import Project.Common.RoomResultsPayload;
 import Project.Common.TimerPayload;
 import Project.Common.TimerType;
 import Project.Common.Constants;
+import Project.Common.CooldownPayload;
 import Project.Common.LeaderboardPayload;
 import Project.Common.LeaderboardRecord;
 
@@ -119,6 +120,9 @@ public class ServerThread extends BaseServerThread {
                 case ROOM_JOIN:
                     currentRoom.handleJoinRoom(this, payload.getMessage());
                     break;
+                case ROOM_SJOIN:
+                    currentRoom.handleJoinRoomSpectator(this, payload.getMessage());
+                    break;
                 case ROOM_LIST:
                     currentRoom.handleListRooms(this, payload.getMessage());
                     break;
@@ -157,16 +161,37 @@ public class ServerThread extends BaseServerThread {
                         sendMessage("You must be in a GameRoom to set away status");
                     }
                     break;
+                case COOLDOWN:
+                    //should only happen in gameroom
+                    try{
+                        // cast to GameRoom as the subclass will handle all Game logic
+                        ((GameRoom) currentRoom).checkCurrentPhase(this,Phase.READY);
+                        ((GameRoom) currentRoom).handleCooldown(this);
+                    } catch (Exception e) {
+                        sendMessage("You must be in a GameRoom to set away status");
+                    }
+                    break;
                 default:
                     break;
             }
         } catch (Exception e) {
             LoggerUtil.INSTANCE.severe("Could not process Payload: " + payload, e);
-
         }
     }
     // send methods specific to non-chatroom projects
     // send methods specific to non-chatroom
+    public boolean sendCooldown(long clientID, boolean cooldown){
+        return sendCooldown(clientID, cooldown,false);
+    }
+    public boolean sendCooldown(long clientId, boolean cooldown, boolean quiet){
+        CooldownPayload rp = new CooldownPayload();
+        rp.setClientId(clientId);
+        rp.setCooldown(cooldown);
+        if(quiet){
+            rp.setPayloadType(PayloadType.COOLDOWN);
+        }
+        return send(rp);
+    }
     public boolean sendAwayReset(){
         AwayPayload rp = new AwayPayload();
         rp.setPayloadType(PayloadType.RESET_AWAY);

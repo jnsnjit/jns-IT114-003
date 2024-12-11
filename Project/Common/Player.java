@@ -26,12 +26,18 @@ public class Player {
     }
     public void setReady(boolean isReady) {
         this.isReady = isReady;
+        if(isReady == true){
+            away = false;
+        }
     }
     public boolean isAway(){
         return away;
     }
     public void setAway(){
         this.away = away ? false : true;
+        if(away){
+            isReady = false;
+        }
     }
     public void setAway(boolean away){
         this.away = away;

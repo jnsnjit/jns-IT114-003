@@ -12,6 +12,7 @@ import Project.Common.Player;
  */
 public class ClientPlayer extends Player {
     private String clientName;
+    private boolean isSpectator;
     public String getClientName() {
         return clientName;
     }
@@ -25,5 +26,10 @@ public class ClientPlayer extends Player {
         super.reset();
         this.clientName = "";
     }
-    
+    public void setSpectator(boolean spect){
+        this.isSpectator = spect;
+    }
+    public boolean getSpectator(){
+        return isSpectator;
+    }
 }

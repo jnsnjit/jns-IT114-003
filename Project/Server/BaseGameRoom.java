@@ -17,7 +17,11 @@ public abstract class BaseGameRoom extends Room {
     // this makes it easier to utilize concepts across all project types and not
     // impact chatroom projects
     protected ConcurrentHashMap<Long, ServerPlayer> playersInRoom = new ConcurrentHashMap<Long, ServerPlayer>();
-    
+    // new hash map to store spectators, milestone4
+    protected ConcurrentHashMap<Long, ServerSpectator> spectatorsInRoom = new ConcurrentHashMap<Long, ServerSpectator>();
+
+    protected boolean cooldownGame = false;
+
     private TimedEvent readyTimer = null;
 
     protected final int MINIMUM_REQUIRED_TO_START = 2;
@@ -72,22 +76,37 @@ public abstract class BaseGameRoom extends Room {
      */
     protected abstract void onClientRemoved(ServerPlayer client);
 
+    //these are for milestone 4, when spectator joins
+    protected abstract void onSpectatorAdded(ServerSpectator client);
+
+    protected abstract void onSpectatorRemoved(ServerSpectator client);
+
     @Override
-    protected synchronized void addClient(ServerThread client) {
+    protected synchronized void addClient(ServerThread client, boolean spectator) {
         if (!isRunning) { // block action if Room isn't running
             return;
         }
         // do the base Room class logic
-        super.addClient(client);
+        super.addClient(client, spectator);
 
         if (playersInRoom.containsKey(client.getClientId())) {
 
             return;
         }
+
         // create a ServerPlayer wrapper and track it in this subclass
-        ServerPlayer sp = new ServerPlayer(client);
-        playersInRoom.put(client.getClientId(), sp);
-        onClientAdded(sp);
+        //milestone4, now adding option for player to join as a "spectator", will start implementing from here
+        if(spectator){
+            ServerSpectator ss = new ServerSpectator(client);
+            spectatorsInRoom.put(client.getClientId(),ss);
+            info(String.format("%s[%s] joined as a Spectator", client.getClientName(), client.getClientId()));
+            onSpectatorAdded(ss);
+            // dont add to players in room, but list of spectators in room
+        }else{
+            ServerPlayer sp = new ServerPlayer(client);
+            playersInRoom.put(client.getClientId(), sp);
+            onClientAdded(sp);
+        }
     }
 
     @Override
@@ -177,8 +196,8 @@ public abstract class BaseGameRoom extends Room {
      * Syncs the current phase to a single client
      * @param sp
      */
-    protected void syncCurrentPhase(ServerPlayer sp){
-        sp.sendCurrentPhase(currentPhase);
+    protected void syncCurrentPhase(ServerThread s){
+        s.sendCurrentPhase(currentPhase);
     }
 
     /**
@@ -201,8 +220,24 @@ public abstract class BaseGameRoom extends Room {
         }
         return failedToSend;
         });
+        //must send to spectators as well
+        spectatorsInRoom.values().removeIf(ssInRoom -> {
+            boolean failedToSend = !ssInRoom.sendCurrentPhase(currentPhase);
+            if (failedToSend) {
+                removedClient(ssInRoom.getServerThread());
+            }
+            return failedToSend;
+        });
     }
-
+    protected void sendCooldown(ServerThread sp, boolean cooldownStatus){
+        playersInRoom.values().removeIf(spInRoom -> {
+            boolean failedToSend = !spInRoom.sendCooldown(spInRoom.getClientId(),cooldownStatus);
+            if (failedToSend) {
+                removedClient(spInRoom.getServerThread());
+            }
+            return failedToSend;
+            });
+    }
     /**
      * A shorthand way of telling all clients to reset their local list's ready status
      */
@@ -245,6 +280,14 @@ public abstract class BaseGameRoom extends Room {
             }
             return failedToSend;
         });
+        //must send to spectators as well
+        spectatorsInRoom.values().removeIf(ssInRoom -> {
+            boolean failedToSend = !ssInRoom.sendReadyStatus(incomingSP.getClientId(), incomingSP.isReady());
+            if (failedToSend) {
+                removedClient(ssInRoom.getServerThread());
+            }
+            return failedToSend;
+        });
     }
     //sends away status of server player to other players in room
     protected void sendAwayStatus(ServerPlayer incomingSP, boolean isAway) {
@@ -252,6 +295,14 @@ public abstract class BaseGameRoom extends Room {
             boolean failedToSend = !spInRoom.sendAwayStatus(incomingSP.getClientId(), incomingSP.isAway());
             if (failedToSend) {
                 removedClient(spInRoom.getServerThread());
+            }
+            return failedToSend;
+        });
+        //must send to spectators as well
+        spectatorsInRoom.values().removeIf(ssInRoom -> {
+            boolean failedToSend = !ssInRoom.sendAwayStatus(incomingSP.getClientId(), incomingSP.isAway());
+            if (failedToSend) {
+                removedClient(ssInRoom.getServerThread());
             }
             return failedToSend;
         });
@@ -281,6 +332,22 @@ public abstract class BaseGameRoom extends Room {
             sendReadyStatus(sp, sp.isReady());
         } catch (Exception e) {
             LoggerUtil.INSTANCE.severe("handleReady exception", e);
+        }
+
+    }
+    //milestone4
+    // receive data from ServerThread (GameRoom specific)
+    protected void handleCooldown(ServerThread sender){
+        try {
+            // early exit checks
+            checkPlayerInRoom(sender);
+            checkCurrentPhase(sender, Phase.READY);
+
+            cooldownGame = cooldownGame ? false : true;
+            sendCooldown(sender, cooldownGame);
+            //send
+        } catch (Exception e) {
+            LoggerUtil.INSTANCE.severe("handleCooldown exception", e);
         }
 
     }
@@ -330,8 +397,13 @@ public abstract class BaseGameRoom extends Room {
      */
     protected void checkPlayerInRoom(ServerThread client) throws Exception {
         if (!playersInRoom.containsKey(client.getClientId())) {
-            LoggerUtil.INSTANCE.severe("Player isn't in room");
-            throw new Exception("Player isn't in room");
+            if(!spectatorsInRoom.containsKey(client.getClientId())){
+                LoggerUtil.INSTANCE.severe("Client isn't in room");
+                throw new Exception("Client isn't in room");
+            }
+            //LoggerUtil.INSTANCE.severe("Player isn't in room");
+            //sendMessage(null, "Spectators can not interact with the game !!");
+            throw new Exception("spectators can not play");
         }
     }
     // end Logic Checks
