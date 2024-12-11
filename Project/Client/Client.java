@@ -8,6 +8,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Timer;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -570,6 +571,14 @@ public enum Client {
                 case PayloadType.AWAY:
                     AwayPayload ap = (AwayPayload) payload;
                     processAwayStatus(ap.getClientId(), ap.getAway(), false);
+                    break;
+                case PayloadType.TIME:
+                    TimerPayload tp = (TimerPayload) payload;
+                    processCurrentTimer(tp.getTimerType(), tp.getTime());
+                    break;
+                case PayloadType.POINTS:
+                    PointsPayload pp = (PointsPayload) payload;
+                    processPoints(pp.getClientId(),pp.getPoints());
                     break;
                 default:
                     break;
